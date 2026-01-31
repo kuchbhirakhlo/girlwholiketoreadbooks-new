@@ -1,0 +1,211 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // HELPER FUNCTIONS
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function getAuthorRole() {
+      // During create, use request.resource.data; during read/update, use resource.data
+      return isAuthenticated() ? 
+        (resource.data != null ? resource.data.authorRole : request.resource.data.authorRole) : 
+        null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && getAuthorRole() == 'admin';
+    }
+
+    function isEditor() {
+      return isAuthenticated() && getAuthorRole() == 'editor';
+    }
+
+    function isStaff() {
+      return isAuthenticated() && 
+             (getAuthorRole() == 'admin' || getAuthorRole() == 'editor');
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function hasValidPostFields() {
+      let data = request.resource.data;
+      return data.title is string
+          && data.title.size() >= 3
+          && data.slug is string
+          && data.slug.size() >= 3
+          && data.excerpt is string
+          && data.excerpt.size() >= 10
+          && data.excerpt.size() <= 300
+          && data.content is string
+          && data.content.size() >= 50
+          && data.bookTitle is string
+          && data.bookTitle.size() >= 1
+          && data.authorName is string
+          && data.authorName.size() >= 2
+          && data.genre is list
+          && data.genre.size() >= 1
+          && data.genre.size() <= 5
+          && data.rating is number
+          && data.rating >= 1
+          && data.rating <= 5
+          && data.status in ['draft', 'review', 'published']
+          && data.authorId is string
+          && data.authorRole in ['admin', 'editor'];
+    }
+
+    function hasValidStatusTransition() {
+      let newStatus = request.resource.data.status;
+      let currentUserRole = getAuthorRole();
+      return currentUserRole == 'editor' 
+        ? newStatus in ['draft', 'review']
+        : newStatus in ['draft', 'review', 'published'];
+    }
+
+    function hasValidRole() {
+      return request.resource.data.role in ['admin', 'editor'];
+    }
+
+    function hasValidTimestamps(hasCreated, hasUpdated) {
+      return !hasCreated && !hasUpdated ? true :
+             hasCreated ? request.resource.data.createdAt is timestamp :
+             request.resource.data.updatedAt is timestamp;
+    }
+
+    // USERS COLLECTION
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (isAdmin() || isOwner(userId));
+      allow create: if isAdmin() 
+                    || (isOwner(userId) && request.resource.data.role == 'reader');
+      allow update: if isAdmin()
+                    || (isOwner(userId) && request.resource.data.role == 'reader' && !request.resource.data.keys().hasAny(['role']));
+      allow delete: if isAdmin();
+    }
+
+    // POSTS COLLECTION
+    match /posts/{postId} {
+      allow read: if resource != null 
+                  && ((resource.data.status == 'published') || isStaff() || !isAuthenticated());
+      
+      allow create: if isStaff() && isOwner(request.resource.data.authorId) 
+                    && hasValidPostFields()
+                    && hasValidTimestamps(true, false)
+                    && hasValidStatusTransition();
+      
+      allow update: if (isAdmin() || (isEditor() && isOwner(resource.data.authorId)))
+                    && hasValidPostFields()
+                    && hasValidTimestamps(false, true)
+                    && hasValidStatusTransition()
+                    && request.resource.data.authorId == resource.data.authorId;
+      
+      allow delete: if isAdmin() || (isEditor() && isOwner(resource.data.authorId));
+    }
+
+    // COMMENTS COLLECTION
+    match /comments/{commentId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated()
+                    && request.resource.data.content is string
+                    && request.resource.data.content.size() >= 1
+                    && request.resource.data.content.size() <= 1000
+                    && request.resource.data.postId is string
+                    && request.resource.data.userId is string
+                    && request.resource.data.userName is string;
+      allow update: if isAuthenticated() && isOwner(resource.data.userId);
+      allow delete: if isAuthenticated() && isOwner(resource.data.userId);
+    }
+
+    // FAVORITES COLLECTION
+    match /favorites/{favoriteId} {
+      allow read: if isAuthenticated() && (isAdmin() || request.auth.uid == resource.data.userId);
+      allow create: if isAuthenticated()
+                    && request.resource.data.postId is string
+                    && request.resource.data.userId is string
+                    && request.auth.uid == request.resource.data.userId;
+      allow delete: if isAuthenticated() && (isAdmin() || request.auth.uid == resource.data.userId);
+    }
+
+    rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // HELPER FUNCTIONS
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function getAuthorRole() {
+      return isAuthenticated() ? 
+        (resource.data != null ? resource.data.authorRole : request.resource.data.authorRole) : 
+        null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && getAuthorRole() == 'admin';
+    }
+
+    function isEditor() {
+      return isAuthenticated() && getAuthorRole() == 'editor';
+    }
+
+    function isStaff() {
+      return isAuthenticated() && 
+             (getAuthorRole() == 'admin' || getAuthorRole() == 'editor');
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // USERS COLLECTION
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (isAdmin() || isOwner(userId));
+      allow create: if isAdmin() 
+                    || (isOwner(userId) && request.resource.data.role == 'reader');
+      allow update: if isAdmin()
+                    || (isOwner(userId) && request.resource.data.role == 'reader' && !request.resource.data.keys().hasAny(['role']));
+      allow delete: if isAdmin();
+    }
+
+    // POSTS COLLECTION
+    match /posts/{postId} {
+      allow read: if resource != null 
+                  && ((resource.data.status == 'published') || isStaff() || !isAuthenticated());
+      allow create: if isStaff() && isOwner(request.resource.data.authorId);
+      allow update: if (isAdmin() || (isEditor() && isOwner(resource.data.authorId)));
+      allow delete: if isAdmin() || (isEditor() && isOwner(resource.data.authorId));
+    }
+
+    // COMMENTS COLLECTION
+    match /comments/{commentId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && isOwner(resource.data.userId);
+      allow delete: if isAuthenticated() && isOwner(resource.data.userId);
+    }
+
+    // FAVORITES COLLECTION
+    match /favorites/{favoriteId} {
+      allow read: if isAuthenticated() && (isAdmin() || request.auth.uid == resource.data.userId);
+      allow create: if isAuthenticated()
+                    && request.resource.data.postId is string
+                    && request.resource.data.userId is string
+                    && request.auth.uid == request.resource.data.userId;
+      allow delete: if isAuthenticated() && (isAdmin() || request.auth.uid == resource.data.userId);
+    }
+
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}
+
+
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}
