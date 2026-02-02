@@ -17,7 +17,8 @@ import {
   Loader2,
   Menu,
   X,
-  ChevronRight
+  ChevronRight,
+  Image
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -31,6 +32,7 @@ interface AuthUser extends User {
 const navigation = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
   { name: 'Posts', href: '/admin/posts', icon: FileText },
+  { name: 'Gallery', href: '/admin/gallery', icon: Image },
   { name: 'Users', href: '/admin/users', icon: Users },
   { name: 'Settings', href: '/admin/settings', icon: Settings },
 ];

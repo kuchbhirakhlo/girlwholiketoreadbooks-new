@@ -73,6 +73,8 @@ export async function GET(request: NextRequest) {
         updatedAt: data.updatedAt instanceof Timestamp ? data.updatedAt.toDate() : data.updatedAt,
         getYourBookLink: data.getYourBookLink || null,
         status: data.status || 'published',
+        quotes: data.quotes || [],
+        tropes: data.tropes || [],
       };
     });
 

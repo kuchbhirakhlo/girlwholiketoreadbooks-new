@@ -28,6 +28,9 @@ export default function Header() {
           <Link href="/genres" className="text-sm text-foreground hover:text-primary transition">
             Genres
           </Link>
+          <Link href="/gallery" className="text-sm text-foreground hover:text-primary transition">
+            Gallery
+          </Link>
           <Link href="/contact" className="text-sm text-foreground hover:text-primary transition">
             Contact for Review
           </Link>
@@ -74,6 +77,13 @@ export default function Header() {
               onClick={() => setIsOpen(false)}
             >
               Genres
+            </Link>
+            <Link 
+              href="/gallery" 
+              className="text-sm text-foreground hover:text-primary transition"
+              onClick={() => setIsOpen(false)}
+            >
+              Gallery
             </Link>
             <Link 
               href="/contact" 

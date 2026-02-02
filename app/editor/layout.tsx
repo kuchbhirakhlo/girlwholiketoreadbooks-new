@@ -28,7 +28,6 @@ interface AuthUser extends User {
 
 const editorNav = [
   { name: 'Write Review', href: '/editor', icon: PenTool },
-  { name: 'My Posts', href: '/editor/posts', icon: FileText },
 ];
 
 export default function EditorLayout({

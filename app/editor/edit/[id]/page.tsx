@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Star, Loader2, BookOpen, Save, ArrowLeft } from 'lucide-react';
+import { Star, Loader2, BookOpen, Save, ArrowLeft, Link as LinkIcon, Quote, Plus, X, Tag } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 
 type UserRole = 'admin' | 'editor' | 'reader';
@@ -45,6 +45,7 @@ interface ReviewFormData {
   review: string;
   bookCover?: string;
   publicationYear?: number;
+  getYourBookLink?: string;
 }
 
 interface PostData {
@@ -59,6 +60,9 @@ interface PostData {
   coverImage?: string;
   publicationYear?: number;
   status: 'draft' | 'review' | 'published';
+  quotes?: string[];
+  tropes?: string[];
+  getYourBookLink?: string;
 }
 
 export default function EditPostPage() {
@@ -67,6 +71,10 @@ export default function EditPostPage() {
   const [submitting, setSubmitting] = useState(false);
   const [post, setPost] = useState<PostData | null>(null);
   const [selectedRating, setSelectedRating] = useState(5);
+  const [quotes, setQuotes] = useState<string[]>([]);
+  const [newQuote, setNewQuote] = useState('');
+  const [tropes, setTropes] = useState<string[]>([]);
+  const [newTrope, setNewTrope] = useState('');
   const router = useRouter();
   const params = useParams();
   const postId = params?.id as string;
@@ -79,6 +87,7 @@ export default function EditPostPage() {
       rating: 5,
       review: '',
       publicationYear: new Date().getFullYear(),
+      getYourBookLink: '',
     },
   });
 
@@ -135,9 +144,14 @@ export default function EditPostPage() {
                 coverImage: data.coverImage || '',
                 publicationYear: data.publicationYear || null,
                 status: data.status || 'draft',
+                quotes: data.quotes || [],
+                tropes: data.tropes || [],
+                getYourBookLink: data.getYourBookLink || '',
               };
               setPost(postData);
               setSelectedRating(postData.rating || 5);
+              setQuotes(postData.quotes || []);
+              setTropes(postData.tropes || []);
               setValue('title', postData.title);
               setValue('author', postData.bookTitle);
               setValue('genre', Array.isArray(postData.genre) ? postData.genre[0] : postData.genre || 'Fiction');
@@ -145,6 +159,7 @@ export default function EditPostPage() {
               setValue('review', postData.content);
               setValue('bookCover', postData.coverImage || '');
               setValue('publicationYear', typeof postData.publicationYear === 'number' ? postData.publicationYear : new Date().getFullYear());
+              setValue('getYourBookLink', postData.getYourBookLink || '');
             }
           }
 
@@ -160,6 +175,28 @@ export default function EditPostPage() {
 
     checkAuth();
   }, [router, postId, setValue]);
+
+  const handleAddQuote = () => {
+    if (newQuote.trim()) {
+      setQuotes([...quotes, newQuote.trim()]);
+      setNewQuote('');
+    }
+  };
+
+  const handleRemoveQuote = (index: number) => {
+    setQuotes(quotes.filter((_, i) => i !== index));
+  };
+
+  const handleAddTrope = () => {
+    if (newTrope.trim() && !tropes.includes(newTrope.trim())) {
+      setTropes([...tropes, newTrope.trim()]);
+      setNewTrope('');
+    }
+  };
+
+  const handleRemoveTrope = (index: number) => {
+    setTropes(tropes.filter((_, i) => i !== index));
+  };
 
   const onSubmit = async (data: ReviewFormData) => {
     if (!user || !postId) return;
@@ -180,6 +217,9 @@ export default function EditPostPage() {
         publicationYear: data.publicationYear || null,
         rating: selectedRating,
         updatedAt: Timestamp.now(),
+        quotes: quotes,
+        tropes: tropes,
+        getYourBookLink: data.getYourBookLink || null,
       });
 
       router.push('/admin/posts');
@@ -210,6 +250,9 @@ export default function EditPostPage() {
         publicationYear: watch('publicationYear') || null,
         rating: selectedRating,
         updatedAt: Timestamp.now(),
+        quotes: quotes,
+        tropes: tropes,
+        getYourBookLink: watch('getYourBookLink') || null,
       });
 
       router.push('/admin/posts');
@@ -363,6 +406,75 @@ export default function EditPostPage() {
                   />
                   <p className="text-xs text-[#6F6F6F]">Provide a direct URL to the book cover image</p>
                 </div>
+
+                {/* Get Your Book Link */}
+                <div className="space-y-2">
+                  <Label htmlFor="getYourBookLink" className="text-[#2B2B2B] flex items-center gap-2">
+                    <LinkIcon className="w-4 h-4" />
+                    Get Your Book Link
+                  </Label>
+                  <Input
+                    id="getYourBookLink"
+                    type="url"
+                    placeholder="https://amazon.com/your-book"
+                    {...register('getYourBookLink')}
+                    className="border-[#E6E1DA] focus:border-[#8B5E3C]"
+                  />
+                  <p className="text-xs text-[#6F6F6F]">Add a link where readers can purchase or get the book</p>
+                </div>
+
+                {/* Tropes */}
+                <div className="space-y-2">
+                  <Label className="text-[#2B2B2B] flex items-center gap-2">
+                    <Tag className="w-4 h-4" />
+                    Tropes
+                  </Label>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Add a trope (e.g., Enemies to Lovers)"
+                      value={newTrope}
+                      onChange={(e) => setNewTrope(e.target.value)}
+                      className="border-[#E6E1DA] focus:border-[#8B5E3C]"
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddTrope();
+                        }
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      onClick={handleAddTrope}
+                      disabled={!newTrope.trim() || tropes.includes(newTrope.trim())}
+                      className="bg-[#8B5E3C] text-white hover:bg-[#8B5E3C]/90"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  {tropes.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {tropes.map((trope, index) => (
+                        <Badge
+                          key={index}
+                          variant="secondary"
+                          className="bg-[#FAF8F5] text-[#2B2B2B] hover:bg-[#FAF8F5] px-3 py-1"
+                        >
+                          {trope}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveTrope(index)}
+                            className="ml-2 text-[#6F6F6F] hover:text-red-500"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                  <p className="text-xs text-[#6F6F6F]">
+                    Add tropes to help readers find books with similar themes
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -412,6 +524,66 @@ export default function EditPostPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Quotes Section */}
+        <Card className="bg-white border-[#E6E1DA]">
+          <CardContent className="pt-6 space-y-6">
+            <h3 className="font-semibold text-[#2B2B2B] flex items-center gap-2">
+              <Quote className="w-5 h-5 text-[#8B5E3C]" />
+              Book Quotes
+            </h3>
+
+            {/* Add New Quote */}
+            <div className="flex gap-2">
+              <textarea
+                placeholder="Add a memorable quote from the book..."
+                value={newQuote}
+                onChange={(e) => setNewQuote(e.target.value)}
+                className="flex-1 px-4 py-3 border border-[#E6E1DA] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8B5E3C]/20 focus:border-[#8B5E3C] resize-none"
+                rows={2}
+              />
+              <Button
+                type="button"
+                onClick={handleAddQuote}
+                disabled={!newQuote.trim()}
+                className="bg-[#8B5E3C] text-white hover:bg-[#8B5E3C]/90"
+              >
+                <Plus className="w-4 h-4" />
+              </Button>
+            </div>
+
+            {/* Quotes List */}
+            {quotes.length > 0 && (
+              <div className="space-y-3">
+                <Label className="text-[#2B2B2B]">Added Quotes ({quotes.length})</Label>
+                <div className="space-y-2">
+                  {quotes.map((quote, index) => (
+                    <div
+                      key={index}
+                      className="flex items-start gap-2 p-3 bg-[#FAF8F5] border border-[#E6E1DA] rounded-lg"
+                    >
+                      <Quote className="w-4 h-4 text-[#8B5E3C] mt-1 flex-shrink-0" />
+                      <p className="flex-1 text-[#2B2B2B] italic">"{quote}"</p>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleRemoveQuote(index)}
+                        className="text-[#6F6F6F] hover:text-red-500"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <p className="text-xs text-[#6F6F6F]">
+              Add memorable quotes from the book to share with readers
+            </p>
+          </CardContent>
+        </Card>
 
         {/* Actions */}
         <div className="flex items-center justify-end gap-4 pt-4">
