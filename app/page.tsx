@@ -158,11 +158,6 @@ export default async function HomePage() {
                   Browse Reviews
                 </span>
               </Link>
-              <Link href="/editor/new">
-                <span className="inline-flex items-center justify-center px-6 py-3 border border-border text-foreground font-semibold rounded-lg hover:bg-secondary transition-colors cursor-pointer">
-                  Write a Review
-                </span>
-              </Link>
             </div>
           </div>
           <div className="relative w-full h-[400px] md:h-[500px] rounded-xl overflow-hidden shadow-2xl">
