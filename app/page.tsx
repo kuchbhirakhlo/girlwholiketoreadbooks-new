@@ -88,7 +88,8 @@ export default async function HomePage() {
   // Fetch posts for featured reviews
   let posts: Post[] = [];
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/posts/get?limit=6&sortBy=latest`, {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
+    const response = await fetch(`${baseUrl}/api/posts/get?limit=6&sortBy=latest`, {
       cache: 'no-store'
     });
     const data = await response.json();

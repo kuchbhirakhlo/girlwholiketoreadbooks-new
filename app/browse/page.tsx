@@ -103,7 +103,8 @@ interface BrowsePageProps {
 
 async function getPosts(sortBy: 'latest' | 'popular' = 'latest'): Promise<Post[]> {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/posts/get?limit=100&sortBy=${sortBy}`, {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
+    const response = await fetch(`${baseUrl}/api/posts/get?limit=100&sortBy=${sortBy}`, {
       cache: 'no-store'
     });
     const data = await response.json();
