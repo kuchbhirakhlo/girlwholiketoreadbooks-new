@@ -46,7 +46,7 @@ interface ReviewPageClientProps {
     author: string;
     year: string;
     genre: string;
-  };
+  } | null;
 }
 
 export default function ReviewPageClient({ slug, bookInfo }: ReviewPageClientProps) {
@@ -64,7 +64,11 @@ export default function ReviewPageClient({ slug, bookInfo }: ReviewPageClientPro
   const [isSaved, setIsSaved] = useState(false);
 
   const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
-  const shareText = post ? `Check out this review: ${post.title} by ${post.author}` : `Check out this book review of ${bookInfo.title} by ${bookInfo.author}`;
+  const shareText = post 
+    ? `Check out this review: ${post.title} by ${post.author}` 
+    : bookInfo 
+      ? `Check out this book review of ${bookInfo.title} by ${bookInfo.author}`
+      : 'Check out this book review';
 
   const handleShare = (platform: string) => {
     const encodedUrl = encodeURIComponent(shareUrl);
@@ -143,13 +147,19 @@ export default function ReviewPageClient({ slug, bookInfo }: ReviewPageClientPro
         const response = await fetch(`/api/posts/get?limit=100`);
         const data = await response.json();
         
-        // Try to find post by matching slug info or first post
-        let foundPost = data.posts?.find((p: Post) => {
-          // Match by title and author if available
-          const titleMatch = p.title.toLowerCase().includes(bookInfo.title.toLowerCase());
-          const authorMatch = p.author.toLowerCase().includes(bookInfo.author.toLowerCase());
-          return titleMatch && authorMatch;
-        });
+        let foundPost: Post | undefined;
+        
+        if (bookInfo) {
+          // If we have bookInfo from a slug, try to match by title and author
+          foundPost = data.posts?.find((p: Post) => {
+            const titleMatch = p.title.toLowerCase().includes(bookInfo.title.toLowerCase());
+            const authorMatch = p.author.toLowerCase().includes(bookInfo.author.toLowerCase());
+            return titleMatch && authorMatch;
+          });
+        } else {
+          // If no bookInfo, try to find by ID (slug is the ID)
+          foundPost = data.posts?.find((p: Post) => p.id === slug);
+        }
 
         // Fallback: just use the first post if no match found
         if (!foundPost && data.posts?.length > 0) {
@@ -171,7 +181,7 @@ export default function ReviewPageClient({ slug, bookInfo }: ReviewPageClientPro
     };
 
     fetchPost();
-  }, [bookInfo]);
+  }, [slug, bookInfo]);
 
   // Fetch user's favorites when logged in
   useEffect(() => {
@@ -304,7 +314,9 @@ export default function ReviewPageClient({ slug, bookInfo }: ReviewPageClientPro
         <div className="max-w-4xl mx-auto px-4 md:px-8 py-12 text-center">
           <h1 className="text-2xl font-bold text-foreground mb-4">Review Not Found</h1>
           <p className="text-muted-foreground mb-8">
-            The review for "{bookInfo.title}" by {bookInfo.author} could not be found.
+            {bookInfo 
+              ? `The review for "${bookInfo.title}" by ${bookInfo.author} could not be found.`
+              : 'The review you are looking for could not be found.'}
           </p>
           <Link href="/browse">
             <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
@@ -370,7 +382,7 @@ export default function ReviewPageClient({ slug, bookInfo }: ReviewPageClientPro
               </div>
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Published</p>
-                <p className="text-foreground font-medium">{post.publishedYear || bookInfo.year}</p>
+                <p className="text-foreground font-medium">{post.publishedYear || bookInfo?.year || 'Unknown'}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Rating</p>

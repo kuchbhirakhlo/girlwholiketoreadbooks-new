@@ -1,5 +1,4 @@
 import { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import ReviewPageClient from './review-client';
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -9,10 +8,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   // Parse the slug to extract book details
   const bookInfo = parseSlug(slug);
   
+  // For simple IDs, we'll fetch the post to get metadata
   if (!bookInfo) {
+    // Return a placeholder that will be updated client-side, or basic metadata
     return {
-      title: 'Review Not Found | girlwholiketoreadbooks',
-      description: 'The book review you are looking for could not be found.',
+      title: 'Loading Review | girlwholiketoreadbooks',
+      description: 'Loading book review...',
     };
   }
 
@@ -20,7 +21,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   
   // Generate the canonical URL
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://girlwholiketoreadbooks.com';
-  const canonicalUrl = `${baseUrl}/book-review/${slug}`;
+  const canonicalUrl = `${baseUrl}/reviews/${slug}`;
 
   return {
     title: {
@@ -85,7 +86,17 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 }
 
 // Helper function to parse the slug
+// Returns book info if it's a full slug, or null if it's a simple ID
 function parseSlug(slug: string): { title: string; author: string; year: string; genre: string } | null {
+  // Check if it's a simple ID (for backward compatibility)
+  // Simple IDs are typically alphanumeric without special formatting
+  const isSimpleId = /^[a-zA-Z0-9-_]+$/.test(slug) && !slug.includes('-by-') && !slug.includes('-published-in-');
+  
+  if (isSimpleId) {
+    // Return null to indicate we should fetch by ID
+    return null;
+  }
+  
   try {
     // Expected format: book-review-title-by-author-name-published-in-year-and-genre
     // We need to extract the parts from the slug
@@ -170,13 +181,8 @@ export default async function ReviewPage({ params }: { params: Promise<{ slug: s
   // Parse the slug to get book info
   const bookInfo = parseSlug(slug);
   
-  if (!bookInfo) {
-    notFound();
-  }
-
-  // Try to find the post by parsing slug info
-  // For now, we'll pass the parsed info to the client component
-  // In a real app, you might want to query by slug stored in the database
+  // If it's a simple ID (bookInfo is null), we'll pass null bookInfo to the client
+  // and let it fetch the post by ID
   
   return (
     <ReviewPageClient 
