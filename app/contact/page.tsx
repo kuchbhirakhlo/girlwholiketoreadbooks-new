@@ -1,10 +1,12 @@
 'use client';
 
+import Link from 'next/link';
+
 import Header from '@/components/header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Mail, BookOpen, MessageSquare } from 'lucide-react';
+import { Mail, BookOpen, MessageSquare, Instagram, Twitter, Globe, Users, MessageCircle } from 'lucide-react';
 
 export default function ContactPage() {
   return (
@@ -12,6 +14,59 @@ export default function ContactPage() {
       <Header />
 
       <main className="max-w-4xl mx-auto px-4 md:px-8 py-12">
+        {/* Linktree-style Social Links */}
+        <div className="mb-12">
+          <div className="bg-gradient-to-br from-primary/10 via-background to-secondary/10 border border-border rounded-2xl p-8 text-center">
+            <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-r from-primary to-secondary flex items-center justify-center">
+              <BookOpen className="w-10 h-10 text-white" />
+            </div>
+            <h2 className="font-serif text-2xl font-bold text-foreground mb-2">
+              Connect With Us
+            </h2>
+            <p className="text-muted-foreground mb-6">
+              Follow us on social media for book reviews, recommendations, and updates
+            </p>
+            <div className="flex md:flex-row flex-col justify-center gap-4">
+              <Link
+                href="https://instagram.com/girlwholiketoreadbooks"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 text-white rounded-full hover:opacity-90 transition-opacity font-medium"
+              >
+                <Instagram className="w-5 h-5" />
+                <span>Instagram</span>
+              </Link>
+              <Link
+                href="https://x.com/gwltoreadbooks"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-6 py-3 bg-sky-500 text-white rounded-full hover:opacity-90 transition-opacity font-medium"
+              >
+                <Twitter className="w-5 h-5" />
+                <span>Twitter</span>
+              </Link>
+              <Link
+                href="https://threads.com/girlwholiketoreadbooks"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-6 py-3 bg-black text-white rounded-full hover:opacity-90 transition-opacity font-medium"
+              >
+                <MessageCircle className="w-5 h-5" />
+                <span>Threads</span>
+              </Link>
+              <Link
+                href="https://goodreads.com/girlwholiketoreadbooks"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-full hover:opacity-90 transition-opacity font-medium"
+              >
+                <Users className="w-5 h-5" />
+                <span>Goodreads</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+
         {/* Page Header */}
         <div className="text-center mb-12">
           <h1 className="font-serif text-4xl font-bold text-foreground mb-4">

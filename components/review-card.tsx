@@ -78,7 +78,7 @@ export default function ReviewCard({
             )}
             <div className="flex-1 min-w-0 relative">
               <h3 className="font-serif font-bold text-foreground line-clamp-2">{title}</h3>
-              <p className="text-sm text-muted-foreground">by {author}</p>
+              <p className="text-sm text-muted-foreground">by Priya Singh</p>
               <div className="flex items-center gap-2 mt-2">
                 <button 
                   onClick={handleGenreClick}
