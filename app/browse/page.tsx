@@ -38,7 +38,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://girlwholiketoreadbooks.com/browse',
+    url: 'https://girlwholiketoreadbooks.in/browse',
     siteName: 'girlwholiketoreadbooks',
     title: 'Browse Book Reviews - Find Your Next Great Read',
     description: 'Browse our extensive collection of honest book reviews. Filter by genre, search by title or author.',
@@ -58,7 +58,7 @@ export const metadata: Metadata = {
     images: ['/book-reading.jpeg'],
   },
   alternates: {
-    canonical: 'https://girlwholiketoreadbooks.com/browse',
+    canonical: 'https://girlwholiketoreadbooks.in/browse',
   },
   category: 'Books & Literature',
 };

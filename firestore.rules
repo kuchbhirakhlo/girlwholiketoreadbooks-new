@@ -119,12 +119,12 @@ service cloud.firestore {
 
     // FAVORITES COLLECTION
     match /favorites/{favoriteId} {
-      allow read: if isAuthenticated() && (isAdmin() || request.auth.uid == resource.data.userId);
+      allow read: if isAuthenticated();
       allow create: if isAuthenticated()
                     && request.resource.data.postId is string
                     && request.resource.data.userId is string
                     && request.auth.uid == request.resource.data.userId;
-      allow delete: if isAuthenticated() && (isAdmin() || request.auth.uid == resource.data.userId);
+      allow delete: if isAuthenticated() && request.auth.uid == resource.data.userId;
     }
 
     // GALLERY COLLECTION

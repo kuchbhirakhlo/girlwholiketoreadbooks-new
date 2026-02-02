@@ -33,7 +33,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://girlwholiketoreadbooks.com/gallery',
+    url: 'https://girlwholiketoreadbooks.in/gallery',
     siteName: 'girlwholiketoreadbooks',
     title: 'Book Gallery - Visual Journey Through Literature',
     description: 'Explore our curated collection of book-related images, literary quotes, and reading moments.',
@@ -53,7 +53,7 @@ export const metadata: Metadata = {
     images: ['/book-reading.jpeg'],
   },
   alternates: {
-    canonical: 'https://girlwholiketoreadbooks.com/gallery',
+    canonical: 'https://girlwholiketoreadbooks.in/gallery',
   },
   category: 'Books & Literature',
 };

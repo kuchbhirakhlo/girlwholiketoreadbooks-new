@@ -506,15 +506,38 @@ export default function ReviewPageClient({ slug, bookInfo }: ReviewPageClientPro
                 className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors mt-6"
               >
                 <span>
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" className="w-5 h-5">
-                    <path d="M110.6 38.3H106v-3.5c0-1-.8-1.7-1.7-1.8H70.8c-2.7 0-5.2 1.2-6.8 3.3c-1.6-2.1-4.1-3.3-6.8-3.3H23.7c-1 0-1.7.8-1.7 1.8v3.5h-4.6c-1 0-1.8.8-1.8 1.8v57c0 1 .8 1.7 1.8 1.8h93.1c1 0 1.7-.8 1.8-1.8V40c0-.9-.8-1.7-1.7-1.7zm-39.8-1.8h31.7v51.9H70.8c-2.9 0-4.6 1.4-5 1.6V41.6c0-.4 0-.7-.1-1.1.5-2.2 2.6-4 5.1-4zm-45.3 0h31.7c2.6 0 4.7 1.9 5 4.1 0 .4-.1.7-.1 1.1V90c-.3-.1-2.1-1.6-5-1.6H25.5V36.5zm-6.3 5.3H22v48.3c0 1 .8 1.8 1.8 1.8h33.5c2 0 3.9 1.1 4.8 3.4H19.2V41.8zm89.6 53.5H66c.8-2.2 2.8-3.4 4.8-3.4h33.5c1 0 1.8-.8 1.8-1.8V41.8h2.8l-.1 53.5z"/>
-                  </svg>
+                  📖
                 </span>
                 <span>Get Your Book</span>
               </a>
             )}
           </div>
         </div>
+
+        {/* Tropes Section - Now appears after metadata/engagement, before review content */}
+        {post.tropes && post.tropes.length > 0 && (
+          <Card className="bg-card border-border mb-12">
+            <CardHeader>
+              <h2 className="text-2xl font-serif font-bold text-foreground flex items-center gap-2">
+                <Tag className="w-6 h-6 text-primary" aria-hidden="true" />
+                Tropes
+              </h2>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-2" role="list" aria-label="Book tropes">
+                {post.tropes.map((trope, index) => (
+                  <span
+                    key={index}
+                    className="px-4 py-2 bg-secondary/50 border border-border rounded-full text-foreground"
+                    role="listitem"
+                  >
+                    {trope}
+                  </span>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Review Content */}
         <Card className="bg-card border-border mb-12">
@@ -546,31 +569,6 @@ export default function ReviewPageClient({ slug, bookInfo }: ReviewPageClientPro
                   >
                     <p className="text-lg text-foreground italic leading-relaxed">"{quote}"</p>
                   </blockquote>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Tropes Section */}
-        {post.tropes && post.tropes.length > 0 && (
-          <Card className="bg-card border-border mb-12">
-            <CardHeader>
-              <h2 className="text-2xl font-serif font-bold text-foreground flex items-center gap-2">
-                <Tag className="w-6 h-6 text-primary" aria-hidden="true" />
-                Tropes
-              </h2>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-2" role="list" aria-label="Book tropes">
-                {post.tropes.map((trope, index) => (
-                  <span
-                    key={index}
-                    className="px-4 py-2 bg-secondary/50 border border-border rounded-full text-foreground"
-                    role="listitem"
-                  >
-                    {trope}
-                  </span>
                 ))}
               </div>
             </CardContent>

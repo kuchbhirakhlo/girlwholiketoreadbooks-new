@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Star, MessageCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface ReviewCardProps {
   id: string;
@@ -50,6 +51,12 @@ export default function ReviewCard({
   
   // Generate SEO-friendly slug
   const slug = generateBookSlug(title, author, publishedYear, genre);
+  const router = useRouter();
+  
+  const handleGenreClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    router.push(`/browse?genre=${encodeURIComponent(genre)}`);
+  };
   
   return (
     <Link href={`/reviews/${slug}`} className="block h-full" title={`Read review of ${title} by ${author}`}>
@@ -73,9 +80,12 @@ export default function ReviewCard({
               <h3 className="font-serif font-bold text-foreground line-clamp-2">{title}</h3>
               <p className="text-sm text-muted-foreground">by {author}</p>
               <div className="flex items-center gap-2 mt-2">
-                <Link href={`/browse?genre=${encodeURIComponent(genre)}`} onClick={(e) => e.stopPropagation()}>
+                <button 
+                  onClick={handleGenreClick}
+                  className="text-left"
+                >
                   <Badge variant="secondary" className="text-xs hover:bg-secondary/80 transition-colors">{genre}</Badge>
-                </Link>
+                </button>
               </div>
             </div>
           </div>

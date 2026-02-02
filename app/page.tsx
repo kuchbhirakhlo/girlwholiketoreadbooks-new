@@ -4,6 +4,9 @@ import ReviewCard from '@/components/review-card';
 import Link from 'next/link';
 import { BookOpen, Users, Star, TrendingUp, Book, Heart, MessageSquare } from 'lucide-react';
 
+// Force dynamic rendering since we fetch posts on each request
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: {
     default: 'girlwholiketoreadbooks - Discover Thoughtful Book Reviews & Literary Critiques',
@@ -38,7 +41,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://girlwholiketoreadbooks.com/',
+    url: 'https://girlwholiketoreadbooks.in/',
     siteName: 'girlwholiketoreadbooks',
     title: 'girlwholiketoreadbooks - Discover Thoughtful Book Reviews & Literary Critiques',
     description: 'Explore curated book reviews, connect with fellow readers, and discover your next great read.',
@@ -59,7 +62,7 @@ export const metadata: Metadata = {
     creator: '@girlwholiketoreadbooks',
   },
   alternates: {
-    canonical: 'https://girlwholiketoreadbooks.com/',
+    canonical: 'https://girlwholiketoreadbooks.in/',
   },
   category: 'Books & Literature',
 };
@@ -99,13 +102,13 @@ export default async function HomePage() {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: 'girlwholiketoreadbooks',
-    url: 'https://girlwholiketoreadbooks.com/',
+    url: 'https://girlwholiketoreadbooks.in/',
     description: 'Discover thoughtful book reviews and connect with fellow readers.',
     potentialAction: {
       '@type': 'SearchAction',
       target: {
         '@type': 'EntryPoint',
-        urlTemplate: 'https://girlwholiketoreadbooks.com/browse?search={search_term}'
+        urlTemplate: 'https://girlwholiketoreadbooks.in/browse?search={search_term}'
       },
       'query-input': 'required name=search_term'
     }
@@ -120,7 +123,7 @@ export default async function HomePage() {
         '@type': 'ListItem',
         position: 1,
         name: 'Home',
-        item: 'https://girlwholiketoreadbooks.com/'
+        item: 'https://girlwholiketoreadbooks.in/'
       }
     ]
   };
@@ -172,6 +175,61 @@ export default async function HomePage() {
               loading="eager"
               fetchPriority="high"
             />
+            {/* Social Media Links */}
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+              <div className="flex justify-center gap-4">
+                <a 
+                  href="https://www.instagram.com/girlwholiketoreadbooks"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 bg-white/20 backdrop-blur-sm rounded-full hover:bg-white/30 transition-colors"
+                  title="Follow us on Instagram"
+                  aria-label="Instagram"
+                >
+                  <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                  </svg>
+                </a>
+                <a 
+                  href="https://www.goodreads.com/girlwholiketoreadbooks"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 bg-white/20 backdrop-blur-sm rounded-full hover:bg-white/30 transition-colors"
+                  title="Follow us on Goodreads"
+                  aria-label="Goodreads"
+                >
+                  <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M12.01 2.625c-1.196-.003-2.427.264-3.535.77-2.22 1.015-3.83 3.025-4.44 5.37-.153.588-.2 1.19-.14 1.795-.596-.135-1.168-.14-1.695-.01-.88.217-1.58.61-2.065 1.12-.493.518-.7 1.137-.615 1.78.11.825.58 1.51 1.305 1.9.35.188.735.31 1.13.36.218-1.028.52-2.01 1.02-2.9.32-.57.7-1.06 1.225-1.445.215-.157.45-.285.705-.38.135.78.37 1.515.735 2.18.53.965 1.27 1.78 2.28 2.395.945.578 2.015.87 3.107.845 1.093-.025 2.14-.37 3.045-1.005.88-.617 1.53-1.45 1.875-2.41.11-.31.18-.63.21-.955.06-.65-.01-1.31-.2-1.96-.32-1.08-.96-2.01-1.8-2.61-.88-.63-1.92-.93-3-.87-1.08.05-2.07.51-2.8 1.31-.71.78-1.08 1.79-1.05 2.86.01.28.04.56.08.83-.19.06-.385.11-.585.14-.66.11-1.305-.06-1.84-.48-.535-.42-.86-1.01-.93-1.68-.02-.19-.02-.38-.01-.57.05-.6.31-1.15.73-1.55.88-.84 2.11-1.29 3.35-1.225.615.03 1.22.18 1.78.44.18-.53.27-1.09.27-1.66 0-2.76-2.24-5-5-5z"/>
+                    <path d="M8.66 11.45c-.31 0-.58.22-.62.52-.05.4.17.78.54.93.65.26 1.08.62 1.27 1.08.2.48.13.99-.18 1.4-.28.37-.74.59-1.22.58-.48-.01-.92-.24-1.18-.62-.27-.39-.31-.89-.1-1.32.24-.49.66-.87 1.19-1.07.43-.16.88-.16 1.3 0 .51.2.93.56 1.16 1.01.17.34.2.72.08 1.08-.1.31-.36.53-.68.55-.32.02-.6-.22-.65-.53-.06-.41-.24-.78-.52-1.07-.36-.37-.86-.57-1.38-.55-.51.03-.98.27-1.3.66-.24.3-.36.67-.34 1.05.03.5.29.94.7 1.18.4.23.88.27 1.32.11.55-.2 1-1.01 1.12-2.02.05-.42-.2-.82-.59-.96-.39-.14-.84-.08-1.18.16-.38.27-.63.67-.7 1.11-.08.54.11 1.07.49 1.4.35.31.8.45 1.26.39.55-.07 1.03-.41 1.29-.92.27-.53.28-1.14.03-1.67-.24-.52-.69-.9-1.24-1.04z"/>
+                    <path d="M15.33 11.45c-.31 0-.58.22-.62.52-.05.4.17.78.54.93.65.26 1.08.62 1.27 1.08.2.48.13.99-.18 1.4-.28.37-.74.59-1.22.58-.48-.01-.92-.24-1.18-.62-.27-.39-.31-.89-.1-1.32.24-.49.66-.87 1.19-1.07.43-.16.88-.16 1.3 0 .51.2.93.56 1.16 1.01.17.34.2.72.08 1.08-.1.31-.36.53-.68.55-.32.02-.6-.22-.65-.53-.06-.41-.24-.78-.52-1.07-.36-.37-.86-.57-1.38-.55-.51.03-.98.27-1.3.66-.24.3-.36.67-.34 1.05.03.5.29.94.7 1.18.4.23.88.27 1.32.11.55-.07 1.03-.41 1.29-.92.27-.53.28-1.14.03-1.67-.24-.52-.69-.9-1.24-1.04z"/>
+                  </svg>
+                </a>
+                <a 
+                  href="https://www.threads.net/@girlwholiketoreadbooks"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 bg-white/20 backdrop-blur-sm rounded-full hover:bg-white/30 transition-colors"
+                  title="Follow us on Threads"
+                  aria-label="Threads"
+                >
+                  <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M12.186 24h-.007c-3.581-.024-6.334-1.205-8.177-3.507C2.35 18.44 1.5 15.586 1.461 12.01v-.02c.04-3.578.89-6.43 2.547-8.48 1.843-2.302 4.596-3.528 8.177-3.552h.02c2.413-.02 4.837.635 6.997 1.89 2.06 1.195 3.636 2.977 4.543 5.134l-2.2 1.267c-1.42-3.34-3.883-4.82-7.15-4.868-2.543-.036-4.893.65-6.437 1.879-1.19.946-1.902 2.303-2.057 3.918-.18 1.867.39 3.5 1.74 4.99 1.27 1.4 3.01 2.15 5.15 2.215 2.4.07 4.717-.75 6.19-2.187l1.843 1.74c-1.93 2.12-4.72 3.228-7.95 3.158v.002z"/>
+                  </svg>
+                </a>
+                <a 
+                  href="https://x.com/gwltoreadbooks"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 bg-white/20 backdrop-blur-sm rounded-full hover:bg-white/30 transition-colors"
+                  title="Follow us on X (Twitter)"
+                  aria-label="X (Twitter)"
+                >
+                  <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                  </svg>
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </section>

@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { title, author, year, genre } = bookInfo;
   
   // Generate the canonical URL
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://girlwholiketoreadbooks.com';
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://girlwholiketoreadbooks.in';
   const canonicalUrl = `${baseUrl}/reviews/${slug}`;
 
   return {

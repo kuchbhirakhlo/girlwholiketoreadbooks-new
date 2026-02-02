@@ -1,31 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { initializeApp, getApps } from 'firebase/app';
-import {
-  getFirestore,
-  collection,
-  addDoc,
-  query,
-  where,
-  getDocs,
-  deleteDoc,
-  serverTimestamp,
-  FieldValue,
-  Timestamp,
-} from 'firebase/firestore';
+import { getAdminDb } from '@/lib/firebase-admin';
 
-const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-};
+const db = getAdminDb();
 
-const app = getApps().length > 0 ? getApps()[0] : initializeApp(firebaseConfig);
-const db = getFirestore(app);
+if (!db) {
+  console.error('Firebase Admin SDK not initialized');
+}
 
 export async function POST(request: NextRequest) {
+  if (!db) {
+    return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+  }
+
   try {
     const body = await request.json();
     const { postId, userId } = body;
@@ -38,9 +24,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if already favorited
+    const { getDocs, query, where, addDoc, collection, serverTimestamp } = require('firebase-admin/firestore');
+    
+    const favoritesRef = collection(db, 'favorites');
     const existingFavorite = await getDocs(
       query(
-        collection(db, 'favorites'),
+        favoritesRef,
         where('postId', '==', postId),
         where('userId', '==', userId)
       )
@@ -53,10 +42,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const favoriteRef = await addDoc(collection(db, 'favorites'), {
+    const favoriteRef = await addDoc(favoritesRef, {
       postId,
       userId,
-      createdAt: serverTimestamp() as FieldValue,
+      createdAt: serverTimestamp(),
     });
 
     return NextResponse.json({
@@ -74,6 +63,10 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
+  if (!db) {
+    return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+  }
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const userId = searchParams.get('userId');
@@ -85,13 +78,16 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const { getDocs, query, where, collection, Timestamp } = require('firebase-admin/firestore');
+    
+    const favoritesRef = collection(db, 'favorites');
     const q = query(
-      collection(db, 'favorites'),
+      favoritesRef,
       where('userId', '==', userId)
     );
 
     const snapshot = await getDocs(q);
-    const favorites = snapshot.docs.map((doc) => {
+    const favorites = snapshot.docs.map((doc: any) => {
       const data = doc.data();
       return {
         id: doc.id,
@@ -111,6 +107,10 @@ export async function GET(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  if (!db) {
+    return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+  }
+
   try {
     const body = await request.json();
     const { postId, userId } = body;
@@ -122,9 +122,12 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    const { getDocs, query, where, collection, deleteDoc } = require('firebase-admin/firestore');
+    
+    const favoritesRef = collection(db, 'favorites');
     const favorite = await getDocs(
       query(
-        collection(db, 'favorites'),
+        favoritesRef,
         where('postId', '==', postId),
         where('userId', '==', userId)
       )
