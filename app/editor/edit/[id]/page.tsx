@@ -38,6 +38,7 @@ const GENRES = [
 ];
 
 interface ReviewFormData {
+  authorName: string;
   title: string;
   author: string;
   genre: string;
@@ -209,7 +210,7 @@ export default function EditPostPage() {
       await updateDoc(doc(dbInstance, 'posts', postId), {
         title: data.title,
         bookTitle: data.author,
-        authorName: post?.authorName || data.author,
+        authorName: data.authorName || data.author,
         content: data.review,
         excerpt: (data.review || '').substring(0, 297) + '...',
         genre: [data.genre],

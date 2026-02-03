@@ -22,13 +22,14 @@ interface ReviewCardProps {
 }
 
 // Helper function to generate SEO-friendly slug
-function generateBookSlug(title: string, author: string, year: string, genre: string): string {
+function generateBookSlug(id: string, title: string, author: string, year: string, genre: string): string {
+  const slugId = id.toLowerCase();
   const slugTitle = title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
   const slugAuthor = author.toLowerCase().replace(/[^a-z0-9]+/g, '-');
   const slugYear = year.toLowerCase().replace(/[^a-z0-9]+/g, '-');
   const slugGenre = genre.toLowerCase().replace(/[^a-z0-9]+/g, '-');
   
-  return `book-review-${slugTitle}-by-${slugAuthor}-published-in-${slugYear}-and-${slugGenre}`;
+  return `${slugTitle}-by-${slugAuthor}-published-in-${slugYear}-and-${slugGenre}-${slugId}`;
 }
 
 export default function ReviewCard({
@@ -49,8 +50,8 @@ export default function ReviewCard({
   const date = createdAt instanceof Date ? createdAt : new Date(createdAt);
   const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   
-  // Generate SEO-friendly slug
-  const slug = generateBookSlug(title, author, publishedYear, genre);
+  // Generate SEO-friendly slug (without book-review- prefix to avoid duplication in URL)
+  const slug = generateBookSlug(id, title, author, publishedYear, genre);
   const router = useRouter();
   
   const handleGenreClick = (e: React.MouseEvent) => {

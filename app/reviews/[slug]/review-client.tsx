@@ -46,6 +46,7 @@ interface ReviewPageClientProps {
     author: string;
     year: string;
     genre: string;
+    id?: string;
   } | null;
 }
 
@@ -149,23 +150,51 @@ export default function ReviewPageClient({ slug, bookInfo }: ReviewPageClientPro
         
         let foundPost: Post | undefined;
         
-        if (bookInfo) {
-          // If we have bookInfo from a slug, try to match by title and author
+        console.log('Fetching post - slug:', slug, 'bookInfo:', bookInfo);
+        
+        if (bookInfo?.id) {
+          // If we have an ID from the slug, use it for exact matching (case-insensitive)
+          const searchId = bookInfo.id.toLowerCase();
+          console.log('Trying exact ID match:', searchId);
+          foundPost = data.posts?.find((p: Post) => p.id.toLowerCase() === searchId);
+          
+          if (foundPost) {
+            console.log('Found post by ID:', foundPost.title);
+          } else {
+            console.log('No match by ID, trying fallback...');
+            // Try to find post by matching the slug pattern
+            foundPost = data.posts?.find((p: Post) => {
+              console.log('Checking post:', p.id, 'slug includes:', slug.includes(p.id));
+              return slug.includes(p.id);
+            });
+          }
+        } else if (bookInfo) {
+          // If we have bookInfo from a slug but no ID, try to match by title and author
+          console.log('Trying title/author match:', bookInfo.title, bookInfo.author);
           foundPost = data.posts?.find((p: Post) => {
-            const titleMatch = p.title.toLowerCase().includes(bookInfo.title.toLowerCase());
-            const authorMatch = p.author.toLowerCase().includes(bookInfo.author.toLowerCase());
+            const titleMatch = p.title.toLowerCase() === bookInfo.title.toLowerCase();
+            const authorMatch = p.author.toLowerCase() === bookInfo.author.toLowerCase();
             return titleMatch && authorMatch;
           });
         } else {
           // If no bookInfo, try to find by ID (slug is the ID)
+          console.log('Trying slug as ID:', slug);
           foundPost = data.posts?.find((p: Post) => p.id === slug);
+          
+          // If still no match, try finding post whose ID is contained in the slug
+          if (!foundPost) {
+            console.log('No match by slug as ID, trying slug contains post.id...');
+            foundPost = data.posts?.find((p: Post) => slug.includes(p.id));
+          }
         }
 
         // Fallback: just use the first post if no match found
         if (!foundPost && data.posts?.length > 0) {
+          console.log('No match found, using first post as fallback');
           foundPost = data.posts[0];
         }
 
+        console.log('Final foundPost:', foundPost?.title);
         setPost(foundPost || null);
 
         if (foundPost) {
@@ -550,28 +579,91 @@ export default function ReviewPageClient({ slug, bookInfo }: ReviewPageClientPro
           </CardContent>
         </Card>
 
-        {/* Book Quotes Section */}
+        {/* Book Quotes Section - Flower Paper Design */}
         {post.quotes && post.quotes.length > 0 && (
-          <Card className="bg-card border-border mb-12">
-            <CardHeader>
-              <h2 className="text-2xl font-serif font-bold text-foreground flex items-center gap-2">
-                <Quote className="w-6 h-6 text-primary" aria-hidden="true" />
-                Notable Quotes
-              </h2>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
+          <div className="mb-12">
+            <h2 className="text-3xl font-serif font-bold text-foreground mb-8 text-center flex items-center justify-center gap-3">
+              <Quote className="w-7 h-7 text-primary" aria-hidden="true" />
+              Notable Quotes
+            </h2>
+            <div className="relative">
+              {/* Decorative Flowers */}
+              <div className="absolute -top-4 -left-4 text-pink-300 opacity-60">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2C9 2 7 4 7 7c0 1.5.5 2.5 1.5 3.5C8 11 7 12 7 14c0 3 2 5 5 5s5-2 5-5c0-2-1-3-1.5-3.5C16.5 9.5 17 8.5 17 7c0-3-2-5-5-5zm0 2c1.5 0 3 1.5 3 3s-1.5 3-3 3-3-1.5-3-3 1.5-3 3-3z"/>
+                  <circle cx="12" cy="7" r="1" fill="#fcd34d"/>
+                </svg>
+              </div>
+              <div className="absolute -top-2 -right-4 text-rose-300 opacity-60">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 3c-2 0-4 2-4 4 0 1.5 1 2.5 2 3.5C10 11.5 9 12.5 9 14c0 2.5 1.5 4 3 4s3-1.5 3-4c0-1.5-1-2.5-1-3.5 1-1 2-2 2-3.5 0-2-2-4-4-4z"/>
+                  <circle cx="12" cy="7" r="0.8" fill="#fbbf24"/>
+                </svg>
+              </div>
+              
+              <div className="grid gap-6">
                 {post.quotes.map((quote, index) => (
-                  <blockquote
+                  <div
                     key={index}
-                    className="p-4 bg-secondary/50 border border-border rounded-lg"
+                    className="relative group"
                   >
-                    <p className="text-lg text-foreground italic leading-relaxed">"{quote}"</p>
-                  </blockquote>
+                    {/* Paper Card Design */}
+                    <div className="relative bg-gradient-to-br from-rose-50/80 via-white to-pink-50/80 rounded-xl p-6 shadow-md border border-rose-100/50 overflow-hidden">
+                      {/* Decorative corner flourishes */}
+                      <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-rose-200 rounded-tl-lg opacity-50"></div>
+                      <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-rose-200 rounded-tr-lg opacity-50"></div>
+                      <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-rose-200 rounded-bl-lg opacity-50"></div>
+                      <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-rose-200 rounded-br-lg opacity-50"></div>
+                      
+                      {/* Subtle pattern overlay */}
+                      <div className="absolute inset-0 opacity-30" style={{
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23fda4af' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+                      }}></div>
+                      
+                      {/* Quote Icon */}
+                      <div className="absolute -top-2 -left-2 w-10 h-10 bg-gradient-to-br from-rose-100 to-pink-100 rounded-full flex items-center justify-center shadow-sm">
+                        <Quote className="w-5 h-5 text-rose-400 transform -scale-x-100" />
+                      </div>
+                      
+                      {/* Quote Content */}
+                      <p className="relative text-lg text-foreground italic leading-relaxed pl-6 pr-4 font-serif">
+                        "{quote}"
+                      </p>
+                      
+                      {/* Decorative flower at bottom */}
+                      <div className="absolute -bottom-2 -right-2 text-pink-200 opacity-40">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M12 6a3 3 0 1 0 0 6 3 3 0 0 0 0-6zm0 8a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/>
+                        </svg>
+                      </div>
+                    </div>
+                    
+                    {/* Subtle shadow on hover */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-rose-100/0 to-pink-100/0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+                  </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
+              
+              {/* Bottom decorative flowers */}
+              <div className="flex justify-center gap-4 mt-6">
+                <div className="text-rose-300 opacity-50">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 4c-2 0-4 2-4 4 0 2 2 3 3 4-1-1-2-2-2-4 0-2 2-4 4-4zm0 2c-1 0-2 1-2 2s1 2 2 2 2-1 2-2-1-2-2-2z"/>
+                  </svg>
+                </div>
+                <div className="text-pink-300 opacity-60">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C9 2 7 4 7 7c0 1.5.5 2.5 1.5 3.5C8 11 7 12 7 14c0 3 2 5 5 5s5-2 5-5c0-2-1-3-1.5-3.5C16.5 9.5 17 8.5 17 7c0-3-2-5-5-5zm0 2c1.5 0 3 1.5 3 3s-1.5 3-3 3-3-1.5-3-3 1.5-3 3-3z"/>
+                  </svg>
+                </div>
+                <div className="text-rose-300 opacity-50">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 4c-2 0-4 2-4 4 0 2 2 3 3 4-1-1-2-2-2-4 0-2 2-4 4-4zm0 2c-1 0-2 1-2 2s1 2 2 2 2-1 2-2-1-2-2-2z"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Comments Section */}
