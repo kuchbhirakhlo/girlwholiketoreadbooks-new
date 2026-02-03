@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Header from '@/components/header';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,8 @@ import { Star, MessageCircle, ThumbsUp, Copy, Check, Heart, Bookmark, Quote, Tag
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useParams, useRouter } from 'next/navigation';
+import { getDbInstance } from '@/lib/firebase';
+import { doc, onSnapshot, collection, query, where, orderBy, onSnapshot as onCommentsSnapshot } from 'firebase/firestore';
 
 interface Post {
   id: string;
@@ -27,7 +29,7 @@ interface Post {
   getYourBookLink?: string;
   quotes?: string[];
   tropes?: string[];
-  publishedYear?: string;
+  publicationYear?: number;
 }
 
 interface Comment {
@@ -127,7 +129,7 @@ export default function ReviewPageClient({ slug, bookInfo }: ReviewPageClientPro
             name: post.author
           },
           genre: post.genre,
-          datePublished: post.publishedYear || 'Unknown'
+          datePublished: post.publicationYear ? String(post.publicationYear) : 'Unknown'
         }
       };
 
@@ -142,74 +144,111 @@ export default function ReviewPageClient({ slug, bookInfo }: ReviewPageClientPro
     }
   }, [post]);
 
+  // Real-time post listener
   useEffect(() => {
-    const fetchPost = async () => {
+    const fetchPostRealTime = async () => {
       try {
-        const response = await fetch(`/api/posts/get?limit=100`);
-        const data = await response.json();
+        const db = await getDbInstance();
+        if (!db || !bookInfo?.id) {
+          // Fallback to API fetch if Firestore not available
+          fetchPostViaAPI();
+          return;
+        }
         
-        let foundPost: Post | undefined;
+        const searchId = bookInfo.id.toLowerCase();
+        const postRef = doc(db, 'posts', searchId);
         
-        console.log('Fetching post - slug:', slug, 'bookInfo:', bookInfo);
-        
-        if (bookInfo?.id) {
-          // If we have an ID from the slug, use it for exact matching (case-insensitive)
-          const searchId = bookInfo.id.toLowerCase();
-          console.log('Trying exact ID match:', searchId);
-          foundPost = data.posts?.find((p: Post) => p.id.toLowerCase() === searchId);
-          
-          if (foundPost) {
-            console.log('Found post by ID:', foundPost.title);
-          } else {
-            console.log('No match by ID, trying fallback...');
-            // Try to find post by matching the slug pattern
-            foundPost = data.posts?.find((p: Post) => {
-              console.log('Checking post:', p.id, 'slug includes:', slug.includes(p.id));
-              return slug.includes(p.id);
+        // Set up real-time listener
+        const unsubscribe = onSnapshot(postRef, (docSnap) => {
+          if (docSnap.exists()) {
+            const postData = { id: docSnap.id, ...docSnap.data() } as Post;
+            setPost(postData);
+            setLoading(false);
+            
+            // Set up real-time comments listener for this post
+            const commentsQuery = query(
+              collection(db, 'comments'),
+              where('postId', '==', postData.id),
+              orderBy('createdAt', 'desc')
+            );
+            
+            const commentsUnsubscribe = onCommentsSnapshot(commentsQuery, (commentsSnap) => {
+              const commentsData = commentsSnap.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+              })) as Comment[];
+              setComments(commentsData);
             });
+            
+            // Store unsubscribe function for cleanup
+            return () => {
+              commentsUnsubscribe();
+            };
+          } else {
+            // Post not found, try API fallback
+            fetchPostViaAPI();
           }
-        } else if (bookInfo) {
-          // If we have bookInfo from a slug but no ID, try to match by title and author
-          console.log('Trying title/author match:', bookInfo.title, bookInfo.author);
-          foundPost = data.posts?.find((p: Post) => {
-            const titleMatch = p.title.toLowerCase() === bookInfo.title.toLowerCase();
-            const authorMatch = p.author.toLowerCase() === bookInfo.author.toLowerCase();
-            return titleMatch && authorMatch;
-          });
-        } else {
-          // If no bookInfo, try to find by ID (slug is the ID)
-          console.log('Trying slug as ID:', slug);
-          foundPost = data.posts?.find((p: Post) => p.id === slug);
-          
-          // If still no match, try finding post whose ID is contained in the slug
-          if (!foundPost) {
-            console.log('No match by slug as ID, trying slug contains post.id...');
-            foundPost = data.posts?.find((p: Post) => slug.includes(p.id));
-          }
-        }
-
-        // Fallback: just use the first post if no match found
-        if (!foundPost && data.posts?.length > 0) {
-          console.log('No match found, using first post as fallback');
-          foundPost = data.posts[0];
-        }
-
-        console.log('Final foundPost:', foundPost?.title);
-        setPost(foundPost || null);
-
-        if (foundPost) {
-          const commentsRes = await fetch(`/api/posts/comments?postId=${foundPost.id}`);
-          const commentsData = await commentsRes.json();
-          setComments(commentsData.comments || []);
-        }
+        }, (error) => {
+          console.error('Error in real-time listener:', error);
+          fetchPostViaAPI();
+        });
+        
+        return () => {
+          unsubscribe();
+        };
       } catch (error) {
-        console.error('Error fetching post:', error);
-      } finally {
-        setLoading(false);
+        console.error('Error setting up real-time listener:', error);
+        fetchPostViaAPI();
       }
     };
-
-    fetchPost();
+    
+    fetchPostRealTime();
+  }, [slug, bookInfo]);
+  
+  // Fallback API fetch for when Firestore is not available
+  const fetchPostViaAPI = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/posts/get?limit=100`);
+      const data = await response.json();
+      
+      let foundPost: Post | undefined;
+      
+      if (bookInfo?.id) {
+        const searchId = bookInfo.id.toLowerCase();
+        foundPost = data.posts?.find((p: Post) => p.id.toLowerCase() === searchId);
+        
+        if (!foundPost) {
+          foundPost = data.posts?.find((p: Post) => slug.includes(p.id));
+        }
+      } else if (bookInfo) {
+        foundPost = data.posts?.find((p: Post) => {
+          const titleMatch = p.title.toLowerCase() === bookInfo.title.toLowerCase();
+          const authorMatch = p.author.toLowerCase() === bookInfo.author.toLowerCase();
+          return titleMatch && authorMatch;
+        });
+      } else {
+        foundPost = data.posts?.find((p: Post) => p.id === slug);
+        if (!foundPost) {
+          foundPost = data.posts?.find((p: Post) => slug.includes(p.id));
+        }
+      }
+      
+      if (!foundPost && data.posts?.length > 0) {
+        foundPost = data.posts[0];
+      }
+      
+      setPost(foundPost || null);
+      
+      if (foundPost) {
+        const commentsRes = await fetch(`/api/posts/comments?postId=${foundPost.id}`);
+        const commentsData = await commentsRes.json();
+        setComments(commentsData.comments || []);
+      }
+    } catch (error) {
+      console.error('Error fetching post via API:', error);
+    } finally {
+      setLoading(false);
+    }
   }, [slug, bookInfo]);
 
   // Fetch user's favorites when logged in
@@ -411,7 +450,7 @@ export default function ReviewPageClient({ slug, bookInfo }: ReviewPageClientPro
               </div>
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Published</p>
-                <p className="text-foreground font-medium">{post.publishedYear || bookInfo?.year || 'Unknown'}</p>
+                <p className="text-foreground font-medium">{post.publicationYear || bookInfo?.year || 'Unknown'}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Rating</p>
