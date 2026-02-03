@@ -402,8 +402,7 @@ export default function ReviewPageClient({ slug, bookInfo }: ReviewPageClientPro
             {/* Author Info */}
             <div className="bg-card border border-border rounded-lg p-4 mb-6">
               <p className="text-sm text-muted-foreground mb-1">Reviewed by</p>
-              <p className="text-foreground font-medium mb-1">{post.userName || 'Anonymous'}</p>
-              <p className="text-sm text-muted-foreground">{formattedDate}</p>
+              <p className="text-foreground font-medium mb-1">Priya Singh</p>
             </div>
 
             {/* Engagement */}
