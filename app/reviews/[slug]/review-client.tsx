@@ -579,89 +579,70 @@ export default function ReviewPageClient({ slug, bookInfo }: ReviewPageClientPro
           </CardContent>
         </Card>
 
-        {/* Book Quotes Section - Flower Paper Design */}
+        {/* Book Quotes Section - Elegant Design */}
         {post.quotes && post.quotes.length > 0 && (
           <div className="mb-12">
             <h2 className="text-3xl font-serif font-bold text-foreground mb-8 text-center flex items-center justify-center gap-3">
-              <Quote className="w-7 h-7 text-primary" aria-hidden="true" />
+              <Quote className="w-7 h-7 text-amber-500" aria-hidden="true" />
               Notable Quotes
             </h2>
-            <div className="relative">
-              {/* Decorative Flowers */}
-              <div className="absolute -top-4 -left-4 text-pink-300 opacity-60">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2C9 2 7 4 7 7c0 1.5.5 2.5 1.5 3.5C8 11 7 12 7 14c0 3 2 5 5 5s5-2 5-5c0-2-1-3-1.5-3.5C16.5 9.5 17 8.5 17 7c0-3-2-5-5-5zm0 2c1.5 0 3 1.5 3 3s-1.5 3-3 3-3-1.5-3-3 1.5-3 3-3z"/>
-                  <circle cx="12" cy="7" r="1" fill="#fcd34d"/>
-                </svg>
-              </div>
-              <div className="absolute -top-2 -right-4 text-rose-300 opacity-60">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 3c-2 0-4 2-4 4 0 1.5 1 2.5 2 3.5C10 11.5 9 12.5 9 14c0 2.5 1.5 4 3 4s3-1.5 3-4c0-1.5-1-2.5-1-3.5 1-1 2-2 2-3.5 0-2-2-4-4-4z"/>
-                  <circle cx="12" cy="7" r="0.8" fill="#fbbf24"/>
-                </svg>
-              </div>
-              
-              <div className="grid gap-6">
-                {post.quotes.map((quote, index) => (
-                  <div
-                    key={index}
-                    className="relative group"
-                  >
-                    {/* Paper Card Design */}
-                    <div className="relative bg-gradient-to-br from-rose-50/80 via-white to-pink-50/80 rounded-xl p-6 shadow-md border border-rose-100/50 overflow-hidden">
-                      {/* Decorative corner flourishes */}
-                      <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-rose-200 rounded-tl-lg opacity-50"></div>
-                      <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-rose-200 rounded-tr-lg opacity-50"></div>
-                      <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-rose-200 rounded-bl-lg opacity-50"></div>
-                      <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-rose-200 rounded-br-lg opacity-50"></div>
-                      
-                      {/* Subtle pattern overlay */}
-                      <div className="absolute inset-0 opacity-30" style={{
-                        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23fda4af' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-                      }}></div>
-                      
-                      {/* Quote Icon */}
-                      <div className="absolute -top-2 -left-2 w-10 h-10 bg-gradient-to-br from-rose-100 to-pink-100 rounded-full flex items-center justify-center shadow-sm">
-                        <Quote className="w-5 h-5 text-rose-400 transform -scale-x-100" />
-                      </div>
-                      
-                      {/* Quote Content */}
-                      <p className="relative text-lg text-foreground italic leading-relaxed pl-6 pr-4 font-serif">
-                        "{quote}"
-                      </p>
-                      
-                      {/* Decorative flower at bottom */}
-                      <div className="absolute -bottom-2 -right-2 text-pink-200 opacity-40">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M12 6a3 3 0 1 0 0 6 3 3 0 0 0 0-6zm0 8a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/>
-                        </svg>
-                      </div>
+            
+            {/* Elegant divider */}
+            <div className="flex items-center justify-center gap-4 mb-8">
+              <div className="h-px w-16 bg-gradient-to-r from-transparent via-amber-300 to-transparent dark:via-amber-600"></div>
+              <div className="w-2 h-2 rotate-45 border border-amber-400 dark:border-amber-500"></div>
+              <div className="h-px w-16 bg-gradient-to-r from-transparent via-amber-300 to-transparent dark:via-amber-600"></div>
+            </div>
+            
+            <div className="grid gap-6">
+              {post.quotes.map((quote, index) => (
+                <div
+                  key={index}
+                  className="group relative"
+                >
+                  {/* Main card with glassmorphism effect */}
+                  <div className="relative bg-gradient-to-br from-amber-50/80 via-orange-50/60 to-rose-50/40 dark:from-amber-950/30 dark:via-orange-900/20 dark:to-rose-900/20 rounded-2xl p-8 shadow-lg border border-amber-100/50 dark:border-amber-800/30 overflow-hidden">
+                    {/* Animated gradient overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-amber-100/30 via-transparent to-rose-100/30 dark:from-amber-900/20 dark:to-rose-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    
+                    {/* Decorative corner elements */}
+                    <div className="absolute top-3 left-3 w-6 h-6 border-t-2 border-l-2 border-amber-300/60 dark:border-amber-600/50 rounded-tl-lg"></div>
+                    <div className="absolute top-3 right-3 w-6 h-6 border-t-2 border-r-2 border-amber-300/60 dark:border-amber-600/50 rounded-tr-lg"></div>
+                    <div className="absolute bottom-3 left-3 w-6 h-6 border-b-2 border-l-2 border-amber-300/60 dark:border-amber-600/50 rounded-bl-lg"></div>
+                    <div className="absolute bottom-3 right-3 w-6 h-6 border-b-2 border-r-2 border-amber-300/60 dark:border-amber-600/50 rounded-br-lg"></div>
+                    
+                    {/* Large decorative quote mark */}
+                    <div className="absolute -top-2 -left-2 text-6xl font-serif text-amber-200/50 dark:text-amber-700/30 select-none leading-none">
+                      "
                     </div>
                     
-                    {/* Subtle shadow on hover */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-rose-100/0 to-pink-100/0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+                    {/* Quote content */}
+                    <div className="relative z-10">
+                      <p className="text-xl md:text-lg text-foreground italic leading-relaxed font-serif pl-4">
+                        <span className="text-amber-500 dark:text-amber-400 mr-1">"</span>
+                        {quote}
+                        <span className="text-amber-500 dark:text-amber-400 ml-1">"</span>
+                      </p>
+                    </div>
+                    
+                    {/* Decorative line */}
+                    <div className="absolute bottom-4 left-8 right-8 h-px bg-gradient-to-r from-transparent via-amber-200/40 dark:via-amber-700/30 to-transparent"></div>
+                    
+                    {/* Bottom decorative element */}
+                    <div className="absolute -bottom-1 -right-1 w-12 h-12 bg-gradient-to-tl from-amber-100/50 to-transparent dark:from-amber-800/30 rounded-tr-2xl"></div>
                   </div>
-                ))}
-              </div>
-              
-              {/* Bottom decorative flowers */}
-              <div className="flex justify-center gap-4 mt-6">
-                <div className="text-rose-300 opacity-50">
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 4c-2 0-4 2-4 4 0 2 2 3 3 4-1-1-2-2-2-4 0-2 2-4 4-4zm0 2c-1 0-2 1-2 2s1 2 2 2 2-1 2-2-1-2-2-2z"/>
-                  </svg>
+                  
+                  {/* Subtle glow on hover */}
+                  <div className="absolute -inset-1 bg-gradient-to-r from-amber-300/20 via-rose-300/20 to-amber-300/20 dark:from-amber-600/20 dark:via-rose-600/20 dark:to-amber-600/20 rounded-2xl opacity-0 group-hover:opacity-100 blur-sm transition-all duration-500 -z-10"></div>
                 </div>
-                <div className="text-pink-300 opacity-60">
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2C9 2 7 4 7 7c0 1.5.5 2.5 1.5 3.5C8 11 7 12 7 14c0 3 2 5 5 5s5-2 5-5c0-2-1-3-1.5-3.5C16.5 9.5 17 8.5 17 7c0-3-2-5-5-5zm0 2c1.5 0 3 1.5 3 3s-1.5 3-3 3-3-1.5-3-3 1.5-3 3-3z"/>
-                  </svg>
-                </div>
-                <div className="text-rose-300 opacity-50">
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 4c-2 0-4 2-4 4 0 2 2 3 3 4-1-1-2-2-2-4 0-2 2-4 4-4zm0 2c-1 0-2 1-2 2s1 2 2 2 2-1 2-2-1-2-2-2z"/>
-                  </svg>
-                </div>
-              </div>
+              ))}
+            </div>
+            
+            {/* Bottom decorative element */}
+            <div className="flex items-center justify-center gap-3 mt-8">
+              <div className="w-1 h-1 rounded-full bg-amber-400 dark:bg-amber-500"></div>
+              <div className="w-2 h-2 rotate-45 border border-amber-400 dark:border-amber-500"></div>
+              <div className="w-1 h-1 rounded-full bg-amber-400 dark:bg-amber-500"></div>
             </div>
           </div>
         )}

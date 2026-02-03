@@ -4,6 +4,12 @@ import Header from '@/components/header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Loader2, Image as ImageIcon } from 'lucide-react';
 
+// Force dynamic rendering to always fetch fresh data
+export const dynamic = 'force-dynamic';
+
+// Revalidate gallery data every 60 seconds
+export const revalidate = 60;
+
 export const metadata: Metadata = {
   title: {
     default: 'Book Gallery - Visual Journey Through Literature | girlwholiketoreadbooks',
