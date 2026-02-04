@@ -90,7 +90,7 @@ interface Post {
   likes: number;
   createdAt: Date | string;
   getYourBookLink?: string;
-  publishedYear?: string;
+  publicationYear?: number | string;
 }
 
 interface BrowsePageProps {
@@ -276,6 +276,7 @@ async function BrowseContent({ searchParams }: BrowsePageProps) {
                       comments={post.comments}
                       likes={post.likes}
                       createdAt={post.createdAt}
+                      publicationYear={post.publicationYear}
 
                     />
                   ))}

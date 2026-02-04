@@ -10,7 +10,7 @@ import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useParams, useRouter } from 'next/navigation';
 import { getDbInstance } from '@/lib/firebase';
-import { doc, onSnapshot, collection, query, where, orderBy, onSnapshot as onCommentsSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot, collection, query, where, orderBy, onSnapshot as onCommentsSnapshot, addDoc, updateDoc, increment, getDocs, Timestamp } from 'firebase/firestore';
 
 interface Post {
   id: string;
@@ -65,6 +65,39 @@ export default function ReviewPageClient({ slug, bookInfo }: ReviewPageClientPro
   const [favorites, setFavorites] = useState<string[]>([]);
   const [isLiked, setIsLiked] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+
+  // Track page view for active users count (client-side for refresh detection)
+  useEffect(() => {
+    const trackView = async () => {
+      try {
+        const firestoreDb = await getDbInstance();
+        if (!firestoreDb) return;
+        
+        const pageViewsRef = collection(firestoreDb, 'pageViews');
+        const today = new Date().toISOString().split('T')[0];
+        
+        const q = query(pageViewsRef, where('date', '==', today));
+        const snapshot = await getDocs(q);
+        
+        if (snapshot.empty) {
+          await addDoc(pageViewsRef, {
+            date: today,
+            views: 1,
+            createdAt: Timestamp.now()
+          });
+        } else {
+          const docRef = doc(firestoreDb, 'pageViews', snapshot.docs[0].id);
+          await updateDoc(docRef, { views: increment(1) });
+        }
+      } catch (error) {
+        // Silently handle error
+      }
+    };
+    
+    // Small delay to ensure the page is fully loaded
+    const timer = setTimeout(trackView, 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
   const shareText = post 

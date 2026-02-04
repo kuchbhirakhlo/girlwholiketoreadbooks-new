@@ -24,6 +24,7 @@ interface Post {
   comments: number;
   likes: number;
   createdAt: Date | string;
+  publicationYear?: number | string;
 }
 
 interface Favorite {
@@ -125,6 +126,7 @@ export default function MyListPage() {
                 comments={post.comments}
                 likes={post.likes}
                 createdAt={post.createdAt}
+                publicationYear={post.publicationYear}
               />
             ))}
           </div>

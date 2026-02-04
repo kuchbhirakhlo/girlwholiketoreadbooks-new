@@ -75,10 +75,17 @@ export async function GET(request: NextRequest) {
         status: data.status || 'published',
         quotes: data.quotes || [],
         tropes: data.tropes || [],
+        publicationYear: data.publicationYear || null,
       };
     });
 
-    return NextResponse.json({ posts });
+    return NextResponse.json({ posts }, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      }
+    });
   } catch (error) {
     console.error('Error fetching posts:', error);
     return NextResponse.json(

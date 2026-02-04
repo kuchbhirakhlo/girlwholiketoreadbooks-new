@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import Header from '@/components/header';
 import ReviewCard from '@/components/review-card';
+import PageViewTracker from '@/components/page-view-tracker';
 import Link from 'next/link';
 import { BookOpen, Users, Star, TrendingUp, Book, Heart, MessageSquare } from 'lucide-react';
 
@@ -84,18 +85,48 @@ interface Post {
   publishedYear?: string;
 }
 
+interface HomeStats {
+  totalReviews: number;
+  activeUsers: number;
+  averageRating: string;
+  totalGenres: number;
+  topGenres: { name: string; count: number }[];
+}
+
 export default async function HomePage() {
   // Fetch posts for featured reviews
   let posts: Post[] = [];
+  let stats: HomeStats = {
+    totalReviews: 0,
+    activeUsers: 0,
+    averageRating: '0',
+    totalGenres: 0,
+    topGenres: [],
+  };
+  
   try {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
+    
+    // Fetch posts for featured reviews
     const response = await fetch(`${baseUrl}/api/posts/get?limit=6&sortBy=latest`, {
       cache: 'no-store'
     });
-    const data = await response.json();
-    posts = data.posts || [];
+    if (response.ok) {
+      const data = await response.json();
+      posts = data.posts || [];
+    }
+    
+    // Fetch homepage stats
+    const statsResponse = await fetch(`${baseUrl}/api/stats/home`, {
+      cache: 'no-store'
+    });
+    if (statsResponse.ok) {
+      const statsData = await statsResponse.json();
+      stats = statsData.stats || stats;
+    }
   } catch (error) {
-    console.error('Error fetching posts:', error);
+    console.error('Error fetching data:', error);
+    // Use default stats values on error
   }
 
   // JSON-LD Structured Data for Organization
@@ -141,6 +172,7 @@ export default async function HomePage() {
       />
 
       <Header />
+      <PageViewTracker />
 
       {/* Hero Section with Full Image */}
       <section className="relative px-4 md:px-8 py-16 md:py-24 border-b border-border overflow-hidden">
@@ -237,28 +269,34 @@ export default async function HomePage() {
             <div className="flex justify-center mb-3">
               <BookOpen className="w-8 h-8 text-primary" aria-hidden="true" />
             </div>
-            <h3 className="text-3xl font-bold text-foreground mb-1">500+</h3>
+            <h3 className="text-3xl font-bold text-foreground mb-1">
+              {stats.totalReviews > 0 ? `${stats.totalReviews}+` : '0'}
+            </h3>
             <p className="text-muted-foreground">Book Reviews</p>
           </div>
           <div className="text-center">
             <div className="flex justify-center mb-3">
               <Users className="w-8 h-8 text-primary" aria-hidden="true" />
             </div>
-            <h3 className="text-3xl font-bold text-foreground mb-1">2K+</h3>
+            <h3 className="text-3xl font-bold text-foreground mb-1">
+              {stats.activeUsers > 0 ? `${(stats.activeUsers / 1000).toFixed(stats.activeUsers >= 1000 ? 1 : 0)}K+` : '0'}
+            </h3>
             <p className="text-muted-foreground">Active Readers</p>
           </div>
           <div className="text-center">
             <div className="flex justify-center mb-3">
               <Star className="w-8 h-8 text-accent" aria-hidden="true" />
             </div>
-            <h3 className="text-3xl font-bold text-foreground mb-1">4.8</h3>
+            <h3 className="text-3xl font-bold text-foreground mb-1">{stats.averageRating}</h3>
             <p className="text-muted-foreground">Average Rating</p>
           </div>
           <div className="text-center">
             <div className="flex justify-center mb-3">
               <TrendingUp className="w-8 h-8 text-primary" aria-hidden="true" />
             </div>
-            <h3 className="text-3xl font-bold text-foreground mb-1">50+</h3>
+            <h3 className="text-3xl font-bold text-foreground mb-1">
+              {stats.totalGenres > 0 ? `${stats.totalGenres}+` : '0'}
+            </h3>
             <p className="text-muted-foreground">Genres</p>
           </div>
         </div>
@@ -312,25 +350,39 @@ export default async function HomePage() {
             find your next great read among our carefully curated reviews.
           </p>
           <nav className="grid md:grid-cols-4 gap-4" aria-label="Browse by genre">
-            {[
-              { name: 'Fiction', count: 120, color: 'bg-blue-100 text-blue-800' },
-              { name: 'Mystery', count: 85, color: 'bg-gray-100 text-gray-800' },
-              { name: 'Romance', count: 72, color: 'bg-pink-100 text-pink-800' },
-              { name: 'Science Fiction', count: 64, color: 'bg-purple-100 text-purple-800' },
-              { name: 'Fantasy', count: 95, color: 'bg-indigo-100 text-indigo-800' },
-              { name: 'Biography', count: 48, color: 'bg-amber-100 text-amber-800' },
-              { name: 'Self-Help', count: 56, color: 'bg-green-100 text-green-800' },
-              { name: 'Thriller', count: 89, color: 'bg-red-100 text-red-800' },
-            ].map((genre) => (
-              <Link 
-                key={genre.name} 
-                href={`/browse?genre=${encodeURIComponent(genre.name)}`}
-                className="p-6 rounded-lg border border-border hover:border-primary hover:bg-secondary/50 transition group"
-              >
-                <h3 className="font-semibold text-foreground group-hover:text-primary transition">{genre.name}</h3>
-                <p className="text-sm text-muted-foreground mt-1">{genre.count} reviews</p>
-              </Link>
-            ))}
+            {stats.topGenres.length > 0 ? (
+              stats.topGenres.map((genre) => (
+                <Link 
+                  key={genre.name} 
+                  href={`/browse?genre=${encodeURIComponent(genre.name)}`}
+                  className="p-6 rounded-lg border border-border hover:border-primary hover:bg-secondary/50 transition group"
+                >
+                  <h3 className="font-semibold text-foreground group-hover:text-primary transition">{genre.name}</h3>
+                  <p className="text-sm text-muted-foreground mt-1">{genre.count} reviews</p>
+                </Link>
+              ))
+            ) : (
+              // Fallback genres when no data available
+              [
+                { name: 'Fiction', count: 0 },
+                { name: 'Mystery', count: 0 },
+                { name: 'Romance', count: 0 },
+                { name: 'Science Fiction', count: 0 },
+                { name: 'Fantasy', count: 0 },
+                { name: 'Biography', count: 0 },
+                { name: 'Self-Help', count: 0 },
+                { name: 'Thriller', count: 0 },
+              ].map((genre) => (
+                <Link 
+                  key={genre.name} 
+                  href={`/browse?genre=${encodeURIComponent(genre.name)}`}
+                  className="p-6 rounded-lg border border-border hover:border-primary hover:bg-secondary/50 transition group"
+                >
+                  <h3 className="font-semibold text-foreground group-hover:text-primary transition">{genre.name}</h3>
+                  <p className="text-sm text-muted-foreground mt-1">{genre.count} reviews</p>
+                </Link>
+              ))
+            )}
           </nav>
         </div>
       </section>

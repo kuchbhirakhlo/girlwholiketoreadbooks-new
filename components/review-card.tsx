@@ -18,7 +18,7 @@ interface ReviewCardProps {
   comments: number;
   likes: number;
   createdAt: Date | string;
-  publishedYear?: string;
+  publicationYear?: number | string;
 }
 
 // Helper function to generate SEO-friendly slug
@@ -44,8 +44,10 @@ export default function ReviewCard({
   comments,
   likes,
   createdAt,
-  publishedYear = '2024',
+  publicationYear,
 }: ReviewCardProps) {
+  // Convert publicationYear to string for display and slug generation
+  const publishedYear = publicationYear ? String(publicationYear) : '2024';
   const truncatedReview = review.substring(0, 150) + (review.length > 150 ? '...' : '');
   const date = createdAt instanceof Date ? createdAt : new Date(createdAt);
   const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });

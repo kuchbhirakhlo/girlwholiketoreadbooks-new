@@ -38,7 +38,6 @@ const GENRES = [
 ];
 
 interface ReviewFormData {
-  authorName: string;
   title: string;
   author: string;
   genre: string;
@@ -154,7 +153,7 @@ export default function EditPostPage() {
               setQuotes(postData.quotes || []);
               setTropes(postData.tropes || []);
               setValue('title', postData.title);
-              setValue('author', postData.bookTitle);
+              setValue('author', postData.authorName || '');  // author field stores authorName
               setValue('genre', Array.isArray(postData.genre) ? postData.genre[0] : postData.genre || 'Fiction');
               setValue('rating', postData.rating || 5);
               setValue('review', postData.content);
@@ -204,18 +203,20 @@ export default function EditPostPage() {
 
     setSubmitting(true);
     try {
+      console.log('Form data:', data);
+      console.log('Publication Year:', data.publicationYear);
       const dbInstance = await getDbInstance();
       if (!dbInstance) return;
 
       await updateDoc(doc(dbInstance, 'posts', postId), {
         title: data.title,
-        bookTitle: data.author,
-        authorName: data.authorName || data.author,
+        bookTitle: data.title,  // bookTitle should be the same as title (book title)
+        authorName: data.author,  // author field contains the author name
         content: data.review,
         excerpt: (data.review || '').substring(0, 297) + '...',
         genre: [data.genre],
         coverImage: data.bookCover || null,
-        publicationYear: data.publicationYear || null,
+        publicationYear: typeof data.publicationYear === 'number' ? data.publicationYear : null,
         rating: selectedRating,
         updatedAt: Timestamp.now(),
         quotes: quotes,
@@ -242,8 +243,8 @@ export default function EditPostPage() {
 
       await updateDoc(doc(dbInstance, 'posts', postId), {
         title: watch('title'),
-        bookTitle: watch('author'),
-        authorName: post?.authorName || watch('author'),
+        bookTitle: watch('title'),  // bookTitle should be the same as title (book title)
+        authorName: watch('author'),  // author field contains the author name
         content: watch('review'),
         excerpt: (watch('review') || '').substring(0, 297) + '...',
         genre: [watch('genre')],
