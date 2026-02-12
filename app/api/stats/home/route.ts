@@ -11,21 +11,36 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
+// Check if Firebase is properly configured
+const isFirebaseConfigured = !!(
+  process.env.NEXT_PUBLIC_FIREBASE_API_KEY &&
+  process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID &&
+  process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+);
+
 let dbInstance: any = null;
 
 function getDb() {
   if (dbInstance) return dbInstance;
   
   try {
+    if (!isFirebaseConfigured) {
+      console.warn('[Stats API] Firebase not configured');
+      return null;
+    }
+    
     const app = getApps().length > 0 ? getApps()[0] : initializeApp(firebaseConfig);
     dbInstance = getFirestore(app);
     return dbInstance;
   } catch (error) {
+    console.error('[Stats API] Error initializing Firestore:', error);
     return null;
   }
 }
 
 export async function GET(request: NextRequest) {
+  console.log('[Stats API] Fetching homepage stats...');
+  
   const firestoreDb = getDb();
   
   // Default response
@@ -41,6 +56,7 @@ export async function GET(request: NextRequest) {
 
   // If Firestore is not available, return defaults
   if (!firestoreDb) {
+    console.warn('[Stats API] Firestore not available, returning defaults');
     return NextResponse.json(responseData);
   }
 
@@ -52,6 +68,7 @@ export async function GET(request: NextRequest) {
     );
     const postsSnapshot = await getDocs(postsQuery);
     const totalReviews = postsSnapshot.size;
+    console.log('[Stats API] Total reviews:', totalReviews);
 
     // Calculate average rating from published posts
     let totalRating = 0;
@@ -86,35 +103,51 @@ export async function GET(request: NextRequest) {
       .slice(0, 8)
       .map(([name, count]) => ({ name, count }));
 
-    // Get page views for active users (from last 30 days)
+    // Get homepage views for "active readers" - count increases on each visit/refresh
     let activeUsers = 0;
     try {
       const pageViewsRef = collection(firestoreDb, 'pageViews');
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0];
       const today = new Date().toISOString().split('T')[0];
       
-      const pageViewsQuery = query(pageViewsRef);
-      const pageViewsSnapshot = await getDocs(pageViewsQuery);
+      // Get homepage-specific views (increases on each visit/refresh)
+      const homeQuery = query(pageViewsRef, where('page', '==', 'home'));
+      const homeSnapshot = await getDocs(homeQuery);
       
-      let totalViews30Days = 0;
-      let todayViews = 0;
+      console.log('[Stats API] Found', homeSnapshot.size, 'pageViews docs');
       
-      pageViewsSnapshot.docs.forEach((docSnapshot) => {
+      homeSnapshot.docs.forEach((docSnapshot) => {
         const data = docSnapshot.data();
-        if (data.date >= thirtyDaysAgoStr) {
-          totalViews30Days += data.views || 0;
-        }
+        console.log('[Stats API] PageViews doc:', data.date, '- views:', data.views);
         if (data.date === today) {
-          todayViews = data.views || 0;
+          activeUsers = data.views || 0;
         }
       });
-
-      // Use today's views as "active readers" (increases on each refresh)
-      activeUsers = Math.max(todayViews, Math.round(totalViews30Days / 7));
+      
+      console.log('[Stats API] Active users for today:', activeUsers);
+      
+      // Fallback: if no views today, use last 7 days average
+      if (activeUsers === 0) {
+        let totalViews7Days = 0;
+        let daysWithViews = 0;
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
+        
+        homeSnapshot.docs.forEach((docSnapshot) => {
+          const data = docSnapshot.data();
+          if (data.date >= sevenDaysAgoStr) {
+            totalViews7Days += data.views || 0;
+            daysWithViews++;
+          }
+        });
+        
+        activeUsers = daysWithViews > 0 ? Math.round(totalViews7Days / daysWithViews) : 100;
+        console.log('[Stats API] Using 7-day average:', activeUsers);
+      }
     } catch (viewsError) {
+      console.error('[Stats API] Error fetching page views:', viewsError);
       // Use default
+      activeUsers = 100;
     }
 
     return NextResponse.json({
@@ -131,6 +164,7 @@ export async function GET(request: NextRequest) {
       }
     });
   } catch (error) {
+    console.error('[Stats API] Error fetching stats:', error);
     return NextResponse.json(responseData);
   }
 }

@@ -2,15 +2,16 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Header from '@/components/header';
+import ReviewCard from '@/components/review-card';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth-context';
-import { Star, MessageCircle, ThumbsUp, Copy, Check, Heart, Bookmark, Quote, Tag } from 'lucide-react';
+import { Star, MessageCircle, ThumbsUp, Copy, Check, Heart, Bookmark, Quote, Tag, BookOpen } from 'lucide-react';
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useParams, useRouter } from 'next/navigation';
 import { getDbInstance } from '@/lib/firebase';
-import { doc, onSnapshot, collection, query, where, orderBy, onSnapshot as onCommentsSnapshot, addDoc, updateDoc, increment, getDocs, Timestamp } from 'firebase/firestore';
+import { doc, onSnapshot, collection, query, where, orderBy, onSnapshot as onCommentsSnapshot, addDoc, updateDoc, increment, getDocs, Timestamp, limit } from 'firebase/firestore';
 
 interface Post {
   id: string;
@@ -65,6 +66,8 @@ export default function ReviewPageClient({ slug, bookInfo }: ReviewPageClientPro
   const [favorites, setFavorites] = useState<string[]>([]);
   const [isLiked, setIsLiked] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [moreReviews, setMoreReviews] = useState<Post[]>([]);
+  const [loadingMoreReviews, setLoadingMoreReviews] = useState(false);
 
   // Track page view for active users count (client-side for refresh detection)
   useEffect(() => {
@@ -283,6 +286,33 @@ export default function ReviewPageClient({ slug, bookInfo }: ReviewPageClientPro
       setLoading(false);
     }
   }, [slug, bookInfo]);
+
+  // Fetch more reviews (other posts) when post is loaded
+  useEffect(() => {
+    const fetchMoreReviews = async () => {
+      if (!post) return;
+      
+      setLoadingMoreReviews(true);
+      try {
+        const response = await fetch(`/api/posts/get?limit=20`);
+        const data = await response.json();
+        
+        const posts = data.posts || [];
+        // Filter out current post and take up to 4 reviews
+        const otherReviews = posts
+          .filter((p: Post) => p.id !== post.id)
+          .slice(0, 4);
+        
+        setMoreReviews(otherReviews);
+      } catch (error) {
+        console.error('Error fetching more reviews:', error);
+      } finally {
+        setLoadingMoreReviews(false);
+      }
+    };
+
+    fetchMoreReviews();
+  }, [post]);
 
   // Fetch user's favorites when logged in
   useEffect(() => {
@@ -795,6 +825,44 @@ export default function ReviewPageClient({ slug, bookInfo }: ReviewPageClientPro
             )}
           </div>
         </div>
+
+        {/* More Reviews Section */}
+        {moreReviews.length > 0 && (
+          <div className="mb-12">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-serif font-bold text-foreground flex items-center gap-2">
+                <BookOpen className="w-6 h-6 text-primary" aria-hidden="true" />
+                More Reviews
+              </h2>
+              <Link 
+                href="/browse"
+                className="text-primary hover:text-primary/80 transition-colors text-sm font-medium"
+              >
+                View All →
+              </Link>
+            </div>
+            
+            <div className="grid gap-6 sm:grid-cols-2">
+              {moreReviews.map((review) => (
+                <ReviewCard
+                  key={review.id}
+                  id={review.id}
+                  title={review.title}
+                  author={review.author}
+                  bookCover={review.bookCover}
+                  rating={review.rating}
+                  review={review.review}
+                  genre={review.genre}
+                  userName={review.userName || 'Anonymous'}
+                  comments={review.comments || 0}
+                  likes={review.likes || 0}
+                  createdAt={review.createdAt}
+                  publicationYear={review.publicationYear}
+                />
+              ))}
+            </div>
+          </div>
+        )}
       </main>
 
       {/* Footer */}

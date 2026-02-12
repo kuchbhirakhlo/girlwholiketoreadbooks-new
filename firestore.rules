@@ -74,6 +74,16 @@ service cloud.firestore {
              request.resource.data.updatedAt is timestamp;
     }
 
+    // PAGE VIEWS COLLECTION - Public read/write for analytics
+    match /pageViews/{pageViewId} {
+      allow read: if true;
+      allow write: if request.resource.data.keys().hasAll(['date', 'page', 'views', 'createdAt'])
+                   && request.resource.data.date is string
+                   && request.resource.data.page is string
+                   && request.resource.data.views is number
+                   && request.resource.data.views >= 0;
+    }
+
     // USERS COLLECTION
     match /users/{userId} {
       allow read: if isAuthenticated() && (isAdmin() || isOwner(userId));
@@ -141,4 +151,3 @@ service cloud.firestore {
     }
   }
 }
-
