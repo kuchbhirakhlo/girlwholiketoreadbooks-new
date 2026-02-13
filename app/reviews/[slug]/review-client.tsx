@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import Header from '@/components/header';
 import ReviewCard from '@/components/review-card';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -11,7 +12,7 @@ import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useParams, useRouter } from 'next/navigation';
 import { getDbInstance } from '@/lib/firebase';
-import { doc, onSnapshot, collection, query, where, orderBy, onSnapshot as onCommentsSnapshot, addDoc, updateDoc, increment, getDocs, Timestamp, limit } from 'firebase/firestore';
+import { doc, onSnapshot, collection, query, where, orderBy, onSnapshot as onCommentsSnapshot } from 'firebase/firestore';
 
 interface Post {
   id: string;
@@ -68,39 +69,6 @@ export default function ReviewPageClient({ slug, bookInfo }: ReviewPageClientPro
   const [isSaved, setIsSaved] = useState(false);
   const [moreReviews, setMoreReviews] = useState<Post[]>([]);
   const [loadingMoreReviews, setLoadingMoreReviews] = useState(false);
-
-  // Track page view for active users count (client-side for refresh detection)
-  useEffect(() => {
-    const trackView = async () => {
-      try {
-        const firestoreDb = await getDbInstance();
-        if (!firestoreDb) return;
-        
-        const pageViewsRef = collection(firestoreDb, 'pageViews');
-        const today = new Date().toISOString().split('T')[0];
-        
-        const q = query(pageViewsRef, where('date', '==', today));
-        const snapshot = await getDocs(q);
-        
-        if (snapshot.empty) {
-          await addDoc(pageViewsRef, {
-            date: today,
-            views: 1,
-            createdAt: Timestamp.now()
-          });
-        } else {
-          const docRef = doc(firestoreDb, 'pageViews', snapshot.docs[0].id);
-          await updateDoc(docRef, { views: increment(1) });
-        }
-      } catch (error) {
-        // Silently handle error
-      }
-    };
-    
-    // Small delay to ensure the page is fully loaded
-    const timer = setTimeout(trackView, 100);
-    return () => clearTimeout(timer);
-  }, []);
 
   const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
   const shareText = post 
@@ -483,13 +451,18 @@ export default function ReviewPageClient({ slug, bookInfo }: ReviewPageClientPro
         {/* Book Header */}
         <div className="flex flex-col md:flex-row gap-8 mb-12">
           {post.bookCover ? (
-            <img
-              src={post.bookCover || "/placeholder.svg"}
-              alt={`Cover of ${post.title}`}
-              className="w-48 h-72 object-cover rounded-lg shadow-lg flex-shrink-0"
-              width="192"
-              height="288"
-            />
+            <div className="relative w-48 h-72 flex-shrink-0">
+              <Image
+                src={post.bookCover || "/placeholder.svg"}
+                alt={`Cover of ${post.title}`}
+                fill
+                sizes="(max-width: 768px) 100vw, 192px"
+                style={{ objectFit: 'cover' }}
+                className="rounded-lg shadow-lg"
+                priority={false}
+                loading="lazy"
+              />
+            </div>
           ) : (
             <div className="w-48 h-72 bg-muted rounded-lg shadow-lg flex items-center justify-center flex-shrink-0">
               <span className="text-muted-foreground">No Cover</span>

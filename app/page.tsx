@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import Image from 'next/image';
 import Header from '@/components/header';
 import ReviewCard from '@/components/review-card';
 import PageViewTracker from '@/components/page-view-tracker';
@@ -52,6 +53,9 @@ export const metadata: Metadata = {
   robots: {
     index: true,
     follow: true,
+    notranslate: true,
+    nosnippet: false,
+    noimageindex: false,
     googleBot: {
       index: true,
       follow: true,
@@ -89,6 +93,8 @@ export const metadata: Metadata = {
   category: 'Books & Literature',
   other: {
     'p:domain_verify': 'your-pinterest-domain-verify-code',
+    'rating': 'general',
+    'language': 'en',
   },
 };
 
@@ -242,14 +248,14 @@ export default async function HomePage() {
             </div>
           </div>
           <div className="relative w-full h-[400px] md:h-[500px] rounded-xl overflow-hidden shadow-2xl">
-            <img 
-              src="/book-reading.jpeg" 
+            <Image
+              src="/book-reading.jpeg"
               alt="Person reading a book in a cozy setting - discover your next favorite read"
-              className="w-full h-full object-cover"
-              width="600"
-              height="500"
-              loading="eager"
-              fetchPriority="high"
+              fill
+              sizes="(max-width: 768px) 100vw, 600px"
+              style={{ objectFit: 'cover' }}
+              className="object-cover"
+              priority={true}
             />
             {/* Social Media Links */}
             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
@@ -527,14 +533,22 @@ export default async function HomePage() {
             Subscribe to our newsletter and get the latest book reviews delivered straight to your inbox. 
             Be the first to discover new releases and hidden gems.
           </p>
-          <form className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto" action="#" method="POST">
+          <form 
+            className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto" 
+            action="#" 
+            method="POST"
+            aria-label="Newsletter subscription form"
+          >
+            <label htmlFor="newsletter-email" className="sr-only">Email address</label>
             <input 
+              id="newsletter-email"
               type="email" 
               name="email"
-              placeholder="Enter your email" 
+              placeholder="Enter your email address" 
               aria-label="Email address for newsletter subscription"
               className="flex-1 px-4 py-3 rounded-lg bg-white text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-foreground"
               required
+              autoComplete="email"
             />
             <button 
               type="submit"
@@ -544,7 +558,7 @@ export default async function HomePage() {
             </button>
           </form>
           <p className="text-xs text-primary-foreground/60 mt-4">
-            We respect your privacy. Unsubscribe at any time.
+            We respect your privacy. Your email will never be shared. Unsubscribe at any time.
           </p>
         </div>
       </section>

@@ -6,7 +6,6 @@ import { collection, query, where, getDocs, addDoc, updateDoc, increment, doc, T
 
 export default function PageViewTracker(): null {
   const [pathname, setPathname] = useState<string>('');
-  const [hasLogged, setHasLogged] = useState(false);
 
   useEffect(() => {
     // Set initial pathname after mount to avoid hydration mismatch
@@ -14,21 +13,15 @@ export default function PageViewTracker(): null {
   }, []);
 
   useEffect(() => {
-    if (!pathname || hasLogged) return;
+    if (!pathname) return;
 
     const trackView = async (): Promise<void> => {
       // Check if Firebase is configured
-      if (!isFirebaseConfigured) {
-        console.warn('[PageViewTracker] Firebase not configured - skipping view tracking');
-        return;
-      }
+      if (!isFirebaseConfigured) return;
 
       try {
         const firestoreDb = await getDbInstance();
-        if (!firestoreDb) {
-          console.warn('[PageViewTracker] Firestore not available');
-          return;
-        }
+        if (!firestoreDb) return;
         
         const pageViewsRef = collection(firestoreDb, 'pageViews');
         const today = new Date().toISOString().split('T')[0];
@@ -37,14 +30,10 @@ export default function PageViewTracker(): null {
         const isHomepage = pathname === '/' || pathname === '/index';
         
         if (isHomepage) {
-          // Track homepage views separately
           const homeQuery = query(pageViewsRef, where('date', '==', today), where('page', '==', 'home'));
           const homeSnapshot = await getDocs(homeQuery);
           
-          console.log('[PageViewTracker] Tracking homepage view, today:', today);
-          
           if (homeSnapshot.empty) {
-            console.log('[PageViewTracker] Creating new pageViews doc for today');
             await addDoc(pageViewsRef, {
               date: today,
               page: 'home',
@@ -54,7 +43,6 @@ export default function PageViewTracker(): null {
           } else {
             const docRef = doc(firestoreDb, 'pageViews', homeSnapshot.docs[0].id);
             await updateDoc(docRef, { views: increment(1) });
-            console.log('[PageViewTracker] Incremented pageViews');
           }
         }
         
@@ -73,17 +61,15 @@ export default function PageViewTracker(): null {
           const docRef = doc(firestoreDb, 'pageViews', snapshot.docs[0].id);
           await updateDoc(docRef, { views: increment(1) });
         }
-        
-        setHasLogged(true);
-      } catch (error) {
-        console.error('[PageViewTracker] Error tracking view:', error);
+      } catch {
+        // Silently handle errors
       }
     };
     
     // Small delay to ensure Firebase is initialized
     const timer = setTimeout(trackView, 500);
     return () => clearTimeout(timer);
-  }, [pathname, hasLogged]);
+  }, [pathname]);
 
   return null;
 }

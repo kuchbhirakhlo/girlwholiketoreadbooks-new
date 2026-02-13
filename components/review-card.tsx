@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -67,13 +68,18 @@ export default function ReviewCard({
         <CardHeader className="pb-3">
           <div className="flex gap-4">
             {bookCover ? (
-              <img
-                src={bookCover || "/placeholder.svg"}
-                alt={`Cover of ${title} by ${author}`}
-                className="w-16 h-24 object-cover rounded bg-muted flex-shrink-0"
-                loading="lazy"
-                decoding="async"
-              />
+              <div className="relative w-16 h-24 flex-shrink-0 rounded bg-muted overflow-hidden">
+                <Image
+                  src={bookCover || "/placeholder.svg"}
+                  alt={`Cover of ${title} by ${author}`}
+                  fill
+                  sizes="64px"
+                  style={{ objectFit: 'cover' }}
+                  className="object-cover"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
             ) : (
               <div className="w-16 h-24 bg-muted rounded flex items-center justify-center flex-shrink-0">
                 <span className="text-xs text-muted-foreground text-center px-1">No Cover</span>

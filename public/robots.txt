@@ -1,0 +1,11 @@
+# Robots.txt for girlwholiketoreadbooks
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /auth/
+Disallow: /admin/
+Disallow: /editor/
+Disallow: /my-list/
+
+# Sitemap
+Sitemap: https://girlwholiketoreadbooks.com/sitemap.xml

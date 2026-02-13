@@ -10,8 +10,28 @@ const geist = Geist({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: 'girlwholiketoreadbooks',
-  description: 'A curated collection of thoughtful book reviews and literary insights',
+  description: 'A curated collection of thoughtful book reviews and literary insights for readers of all genres.',
   generator: 'v0.app',
+  keywords: ['book reviews', 'reading', 'literature', 'book recommendations', 'book blog', 'book recommendations', 'reading community'],
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+    },
+  },
+  openGraph: {
+    title: 'girlwholiketoreadbooks',
+    description: 'A curated collection of thoughtful book reviews and literary insights',
+    type: 'website',
+    siteName: 'girlwholiketoreadbooks',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'girlwholiketoreadbooks',
+    description: 'A curated collection of thoughtful book reviews and literary insights',
+  },
   icons: {
     icon: [
       {
