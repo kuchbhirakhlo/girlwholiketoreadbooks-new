@@ -200,6 +200,7 @@ interface Post {
   getYourBookLink?: string;
   quotes?: string[];
   tropes?: string[];
+  tags?: string[];
   publishedYear?: string;
 }
 

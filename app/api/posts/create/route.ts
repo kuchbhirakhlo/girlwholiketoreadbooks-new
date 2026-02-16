@@ -32,7 +32,8 @@ export async function POST(request: NextRequest) {
       publicationYear, 
       status, 
       slug,
-      idToken 
+      idToken,
+      tags
     } = body;
 
     // Validate required fields
@@ -144,6 +145,7 @@ export async function POST(request: NextRequest) {
       bookCover: bookCover || null,
       likesCount: 0,
       commentsCount: 0,
+      tags: Array.isArray(tags) ? tags : [],
     };
 
     // Use addDoc with the authenticated context if ID token provided

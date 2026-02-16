@@ -62,6 +62,7 @@ interface PostData {
   status: 'draft' | 'review' | 'published';
   quotes?: string[];
   tropes?: string[];
+  tags?: string[];
   getYourBookLink?: string;
 }
 
@@ -75,6 +76,8 @@ export default function EditPostPage() {
   const [newQuote, setNewQuote] = useState('');
   const [tropes, setTropes] = useState<string[]>([]);
   const [newTrope, setNewTrope] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
+  const [newTag, setNewTag] = useState('');
   const router = useRouter();
   const params = useParams();
   const postId = params?.id as string;
@@ -146,12 +149,14 @@ export default function EditPostPage() {
                 status: data.status || 'draft',
                 quotes: data.quotes || [],
                 tropes: data.tropes || [],
+                tags: data.tags || [],
                 getYourBookLink: data.getYourBookLink || '',
               };
               setPost(postData);
               setSelectedRating(postData.rating || 5);
               setQuotes(postData.quotes || []);
               setTropes(postData.tropes || []);
+              setTags(postData.tags || []);
               setValue('title', postData.title);
               setValue('author', postData.authorName || '');  // author field stores authorName
               setValue('genre', Array.isArray(postData.genre) ? postData.genre[0] : postData.genre || 'Fiction');
@@ -198,6 +203,17 @@ export default function EditPostPage() {
     setTropes(tropes.filter((_, i) => i !== index));
   };
 
+  const handleAddTag = () => {
+    if (newTag.trim() && !tags.includes(newTag.trim())) {
+      setTags([...tags, newTag.trim()]);
+      setNewTag('');
+    }
+  };
+
+  const handleRemoveTag = (index: number) => {
+    setTags(tags.filter((_, i) => i !== index));
+  };
+
   const onSubmit = async (data: ReviewFormData) => {
     if (!user || !postId) return;
 
@@ -221,6 +237,7 @@ export default function EditPostPage() {
         updatedAt: Timestamp.now(),
         quotes: quotes,
         tropes: tropes,
+        tags: tags,
         getYourBookLink: data.getYourBookLink || null,
       });
 
@@ -254,6 +271,7 @@ export default function EditPostPage() {
         updatedAt: Timestamp.now(),
         quotes: quotes,
         tropes: tropes,
+        tags: tags,
         getYourBookLink: watch('getYourBookLink') || null,
       });
 
@@ -475,6 +493,59 @@ export default function EditPostPage() {
                   )}
                   <p className="text-xs text-[#6F6F6F]">
                     Add tropes to help readers find books with similar themes
+                  </p>
+                </div>
+
+                {/* SEO Tags */}
+                <div className="space-y-2">
+                  <Label className="text-[#2B2B2B] flex items-center gap-2">
+                    <Tag className="w-4 h-4" />
+                    SEO Tags <span className="text-xs text-[#8B5E3C]">(For Google Search)</span>
+                  </Label>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Add SEO tag (e.g., best romance books 2024)"
+                      value={newTag}
+                      onChange={(e) => setNewTag(e.target.value)}
+                      className="border-[#E6E1DA] focus:border-[#8B5E3C]"
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddTag();
+                        }
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      onClick={handleAddTag}
+                      disabled={!newTag.trim() || tags.includes(newTag.trim())}
+                      className="bg-[#8B5E3C] text-white hover:bg-[#8B5E3C]/90"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  {tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {tags.map((tag, index) => (
+                        <Badge
+                          key={index}
+                          variant="secondary"
+                          className="bg-[#8B5E3C]/10 text-[#8B5E3C] hover:bg-[#8B5E3C]/20 px-3 py-1"
+                        >
+                          {tag}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveTag(index)}
+                            className="ml-2 text-[#6F6F6F] hover:text-red-500"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                  <p className="text-xs text-[#6F6F6F]">
+                    Add SEO keywords to help your review rank higher in Google search results
                   </p>
                 </div>
               </div>

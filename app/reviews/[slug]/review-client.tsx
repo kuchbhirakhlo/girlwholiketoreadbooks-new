@@ -31,6 +31,7 @@ interface Post {
   getYourBookLink?: string;
   quotes?: string[];
   tropes?: string[];
+  tags?: string[];
   publicationYear?: number;
 }
 
@@ -105,7 +106,7 @@ export default function ReviewPageClient({ slug, bookInfo }: ReviewPageClientPro
   // Generate JSON-LD for Book Review
   useEffect(() => {
     if (post) {
-      const jsonLd = {
+      const jsonLd: any = {
         '@context': 'https://schema.org',
         '@type': 'Review',
         headline: `Book Review: ${post.title} by ${post.author}`,
@@ -136,6 +137,17 @@ export default function ReviewPageClient({ slug, bookInfo }: ReviewPageClientPro
           datePublished: post.publicationYear ? String(post.publicationYear) : 'Unknown'
         }
       };
+
+      // Add keywords/tags for SEO if available
+      if (post.tags && post.tags.length > 0) {
+        jsonLd.keywords = post.tags.join(', ');
+      }
+
+      // Add tropes as keywords too
+      if (post.tropes && post.tropes.length > 0) {
+        const existingKeywords = jsonLd.keywords ? jsonLd.keywords + ', ' : '';
+        jsonLd.keywords = existingKeywords + post.tropes.join(', ');
+      }
 
       const script = document.createElement('script');
       script.type = 'application/ld+json';
@@ -638,6 +650,34 @@ export default function ReviewPageClient({ slug, bookInfo }: ReviewPageClientPro
                   </span>
                 ))}
               </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* SEO Tags Section - Helps with Google Search */}
+        {post.tags && post.tags.length > 0 && (
+          <Card className="bg-card border-border mb-12">
+            <CardHeader>
+              <h2 className="text-2xl font-serif font-bold text-foreground flex items-center gap-2">
+                <Tag className="w-6 h-6 text-primary" aria-hidden="true" />
+                Search Tags
+              </h2>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-2" role="list" aria-label="SEO keywords for search">
+                {post.tags.map((tag, index) => (
+                  <span
+                    key={index}
+                    className="px-4 py-2 bg-primary/10 border border-primary/20 rounded-full text-primary"
+                    role="listitem"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+              <p className="text-sm text-muted-foreground mt-4">
+                These keywords help this review appear in Google search results
+              </p>
             </CardContent>
           </Card>
         )}
