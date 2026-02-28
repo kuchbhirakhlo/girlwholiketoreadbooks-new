@@ -228,131 +228,159 @@ export default async function HomePage() {
       <Header />
       <PageViewTracker />
 
-      {/* Hero Section with Full Image */}
-      <section className="relative px-4 md:px-8 py-16 md:py-24 border-b border-border overflow-hidden">
-        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
-          <div className="relative z-10">
-            <h1 className="font-serif text-4xl md:text-5xl font-bold text-foreground mb-6 text-balance">
-              Discover Thoughtful Book Reviews
-            </h1>
-            <p className="text-lg text-muted-foreground mb-8 text-balance leading-relaxed">
-              Explore curated literary critiques, connect with fellow readers, and discover your next great read. 
-              Join our community of book lovers who share honest, in-depth reviews that help you make informed reading choices.
-            </p>
-            <div className="flex flex-wrap gap-4">
-              <Link href="/browse">
-                <span className="inline-flex items-center justify-center px-6 py-3 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors cursor-pointer">
-                  Browse Reviews
-                </span>
-              </Link>
+      {/* Hero Section - Redesigned */}
+      <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-gradient-to-br from-background via-primary/5 to-background">
+        {/* Decorative background elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/10 rounded-full blur-3xl"></div>
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl"></div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-br from-primary/5 to-amber-500/5 rounded-full blur-3xl"></div>
+        </div>
+        
+        <div className="max-w-7xl mx-auto px-4 md:px-8 py-16 relative z-10">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Left Content */}
+            <div className="text-center lg:text-left">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full text-primary text-sm font-medium mb-6">
+                <Star className="w-4 h-4 fill-current" aria-hidden="true" />
+                <span>{stats.averageRating} Average Rating</span>
+              </div>
+              <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 leading-tight">
+                Discover Your Next
+                <span className="text-primary block">Great Read</span>
+              </h1>
+              <p className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto lg:mx-0 leading-relaxed">
+                Explore honest, thoughtful book reviews from our community of passionate readers. 
+                Find your perfect next book today.
+              </p>
+              <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
+                <Link href="/browse">
+                  <span className="inline-flex items-center justify-center px-8 py-4 bg-primary text-primary-foreground font-semibold rounded-xl hover:bg-primary/90 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 cursor-pointer">
+                    Browse Reviews
+                  </span>
+                </Link>
+                <Link href="/contact">
+                  <span className="inline-flex items-center justify-center px-8 py-4 bg-card border-2 border-border text-foreground font-semibold rounded-xl hover:border-primary hover:text-primary transition-all cursor-pointer">
+                    Get Your Book Reviewed
+                  </span>
+                </Link>
+              </div>
+              
+              {/* Social Media Links - Prominent */}
+              <div className="mt-10 pt-8 border-t border-border/50">
+                <p className="text-sm text-muted-foreground mb-4">Follow us on social media</p>
+                <div className="flex justify-center lg:justify-start gap-4">
+                  <a 
+                    href="https://www.instagram.com/girlwholiketoreadbooks"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-3 bg-card border border-border rounded-xl hover:border-primary hover:text-primary transition-all group"
+                    title="Follow us on Instagram"
+                    aria-label="Follow us on Instagram"
+                  >
+                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                    </svg>
+                  </a>
+                  <a 
+                    href="https://www.goodreads.com/girlwholiketoreadbooks"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-3 bg-card border border-border rounded-xl hover:border-primary hover:text-primary transition-all group"
+                    title="Follow us on Goodreads"
+                    aria-label="Follow us on Goodreads"
+                  >
+                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <path d="M12.01 2.625c-1.196-.003-2.427.264-3.535.77-2.22 1.015-3.83 3.025-4.44 5.37-.153.588-.2 1.19-.14 1.795-.596-.135-1.168-.14-1.695-.01-.88.217-1.58.61-2.065 1.12-.493.518-.7 1.137-.615 1.78.11.825.58 1.51 1.305 1.9.35.188.735.31 1.13.36.218-1.028.52-2.01 1.02-2.9.32-.57.7-1.06 1.225-1.445.215-.157.45-.285.705-.38.135.78.37 1.515.735 2.18.53.965 1.27 1.78 2.28 2.395.945.578 2.015.87 3.107.845 1.093-.025 2.14-.37 3.045-1.005.88-.617 1.53-1.45 1.875-2.41.11-.31.18-.63.21-.955.06-.65-.01-1.31-.2-1.96-.32-1.08-.96-2.01-1.8-2.61-.88-.63-1.92-.93-3-.87-1.08.05-2.07.51-2.8 1.31-.71.78-1.08 1.79-1.05 2.86.01.28.04.56.08.83-.19.06-.385.11-.585.14-.66.11-1.305-.06-1.84-.48-.535-.42-.86-1.01-.93-1.68-.02-.19-.02-.38-.01-.57.05-.6.31-1.15.73-1.55.88-.84 2.11-1.29 3.35-1.225.615.03 1.22.18 1.78.44.18-.53.27-1.09.27-1.66 0-2.76-2.24-5-5-5z"/>
+                    </svg>
+                  </a>
+                  <a 
+                    href="https://www.threads.net/@girlwholiketoreadbooks"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-3 bg-card border border-border rounded-xl hover:border-primary hover:text-primary transition-all group"
+                    title="Follow us on Threads"
+                    aria-label="Follow us on Threads"
+                  >
+                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <path d="M12.186 24h-.007c-3.581-.024-6.334-1.205-8.177-3.507C2.35 18.44 1.5 15.586 1.461 12.01v-.02c.04-3.578.89-6.43 2.547-8.48 1.843-2.302 4.596-3.528 8.177-3.552h.02c2.413-.02 4.837.635 6.997 1.89 2.06 1.195 3.636 2.977 4.543 5.134l-2.2 1.267c-1.42-3.34-3.883-4.82-7.15-4.868-2.543-.036-4.893.65-6.437 1.879-1.19.946-1.902 2.303-2.057 3.918-.18 1.867.39 3.5 1.74 4.99 1.27 1.4 3.01 2.15 5.15 2.215 2.4.07 4.717-.75 6.19-2.187l1.843 1.74c-1.93 2.12-4.72 3.228-7.95 3.158v.002z"/>
+                    </svg>
+                  </a>
+                  <a 
+                    href="https://x.com/gwltoreadbooks"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-3 bg-card border border-border rounded-xl hover:border-primary hover:text-primary transition-all group"
+                    title="Follow us on X (Twitter)"
+                    aria-label="Follow us on X (Twitter)"
+                  >
+                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                    </svg>
+                  </a>
+                </div>
+              </div>
+              
+              {/* Review Stats */}
+              <div className="mt-8 grid grid-cols-3 gap-4">
+                <div className="text-center p-4 bg-card/50 rounded-xl border border-border/50">
+                  <p className="text-2xl font-bold text-foreground">{stats.totalReviews > 0 ? (stats.totalReviews >= 1000 ? `${(stats.totalReviews / 1000).toFixed(1)}K+` : `${stats.totalReviews}+`) : '0.1K+'}</p>
+                  <p className="text-xs text-muted-foreground">Reviews</p>
+                </div>
+                <div className="text-center p-4 bg-card/50 rounded-xl border border-border/50">
+                  <p className="text-2xl font-bold text-foreground">{stats.activeUsers > 0 ? (stats.activeUsers >= 1000 ? `${(stats.activeUsers / 1000).toFixed(1)}K+` : `${stats.activeUsers}+`) : '0.1K+'}</p>
+                  <p className="text-xs text-muted-foreground">Readers</p>
+                </div>
+                <div className="text-center p-4 bg-card/50 rounded-xl border border-border/50">
+                  <p className="text-2xl font-bold text-foreground">{stats.averageRating || '4.9'}</p>
+                  <p className="text-xs text-muted-foreground">Rating</p>
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="relative w-full h-[400px] md:h-[500px] rounded-xl overflow-hidden shadow-2xl">
-            <Image
-              src="/book-reading.jpeg"
-              alt="Person reading a book in a cozy setting - discover your next favorite read"
-              fill
-              sizes="(max-width: 768px) 100vw, 600px"
-              style={{ objectFit: 'cover' }}
-              className="object-cover"
-              priority={true}
-            />
-            {/* Social Media Links */}
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-              <div className="flex justify-center gap-4">
-                <a 
-                  href="https://www.instagram.com/girlwholiketoreadbooks"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 bg-white/20 backdrop-blur-sm rounded-full hover:bg-white/30 transition-colors"
-                  title="Follow us on Instagram"
-                  aria-label="Instagram"
-                >
-                  <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-                  </svg>
-                </a>
-                <a 
-                  href="https://www.goodreads.com/girlwholiketoreadbooks"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 bg-white/20 backdrop-blur-sm rounded-full hover:bg-white/30 transition-colors"
-                  title="Follow us on Goodreads"
-                  aria-label="Goodreads"
-                >
-                  <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path d="M12.01 2.625c-1.196-.003-2.427.264-3.535.77-2.22 1.015-3.83 3.025-4.44 5.37-.153.588-.2 1.19-.14 1.795-.596-.135-1.168-.14-1.695-.01-.88.217-1.58.61-2.065 1.12-.493.518-.7 1.137-.615 1.78.11.825.58 1.51 1.305 1.9.35.188.735.31 1.13.36.218-1.028.52-2.01 1.02-2.9.32-.57.7-1.06 1.225-1.445.215-.157.45-.285.705-.38.135.78.37 1.515.735 2.18.53.965 1.27 1.78 2.28 2.395.945.578 2.015.87 3.107.845 1.093-.025 2.14-.37 3.045-1.005.88-.617 1.53-1.45 1.875-2.41.11-.31.18-.63.21-.955.06-.65-.01-1.31-.2-1.96-.32-1.08-.96-2.01-1.8-2.61-.88-.63-1.92-.93-3-.87-1.08.05-2.07.51-2.8 1.31-.71.78-1.08 1.79-1.05 2.86.01.28.04.56.08.83-.19.06-.385.11-.585.14-.66.11-1.305-.06-1.84-.48-.535-.42-.86-1.01-.93-1.68-.02-.19-.02-.38-.01-.57.05-.6.31-1.15.73-1.55.88-.84 2.11-1.29 3.35-1.225.615.03 1.22.18 1.78.44.18-.53.27-1.09.27-1.66 0-2.76-2.24-5-5-5z"/>
-                  </svg>
-                </a>
-                <a 
-                  href="https://www.threads.net/@girlwholiketoreadbooks"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 bg-white/20 backdrop-blur-sm rounded-full hover:bg-white/30 transition-colors"
-                  title="Follow us on Threads"
-                  aria-label="Threads"
-                >
-                  <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path d="M12.186 24h-.007c-3.581-.024-6.334-1.205-8.177-3.507C2.35 18.44 1.5 15.586 1.461 12.01v-.02c.04-3.578.89-6.43 2.547-8.48 1.843-2.302 4.596-3.528 8.177-3.552h.02c2.413-.02 4.837.635 6.997 1.89 2.06 1.195 3.636 2.977 4.543 5.134l-2.2 1.267c-1.42-3.34-3.883-4.82-7.15-4.868-2.543-.036-4.893.65-6.437 1.879-1.19.946-1.902 2.303-2.057 3.918-.18 1.867.39 3.5 1.74 4.99 1.27 1.4 3.01 2.15 5.15 2.215 2.4.07 4.717-.75 6.19-2.187l1.843 1.74c-1.93 2.12-4.72 3.228-7.95 3.158v.002z"/>
-                  </svg>
-                </a>
-                <a 
-                  href="https://x.com/gwltoreadbooks"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 bg-white/20 backdrop-blur-sm rounded-full hover:bg-white/30 transition-colors"
-                  title="Follow us on X (Twitter)"
-                  aria-label="X (Twitter)"
-                >
-                  <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                  </svg>
-                </a>
+            
+            {/* Right Content - Floating Book Images */}
+            <div className="relative hidden lg:block">
+              <div className="relative w-full aspect-square max-w-lg mx-auto">
+                {/* Main Book Image */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-80 rounded-2xl overflow-hidden shadow-2xl transform rotate-3 hover:rotate-0 transition-transform duration-500 z-20">
+                  <Image
+                    src="/book-reading.jpeg"
+                    alt="Person reading a book in a cozy setting"
+                    fill
+                    sizes="(max-width: 768px) 100vw, 256px"
+                    style={{ objectFit: 'cover' }}
+                    className="object-cover"
+                    priority={true}
+                  />
+                </div>
+                
+                {/* Floating Book Covers */}
+                <div className="absolute top-10 right-0 w-40 h-56 rounded-lg overflow-hidden shadow-xl transform -rotate-6 hover:rotate-0 transition-transform duration-500 z-10">
+                  <div className="w-full h-full bg-gradient-to-br from-primary/20 to-amber-500/20 flex items-center justify-center">
+                    <BookOpen className="w-16 h-16 text-primary/40" />
+                  </div>
+                </div>
+                
+                <div className="absolute bottom-10 left-0 w-36 h-52 rounded-lg overflow-hidden shadow-xl transform rotate-6 hover:rotate-0 transition-transform duration-500 z-30">
+                  <div className="w-full h-full bg-gradient-to-br from-amber-500/20 to-primary/20 flex items-center justify-center">
+                    <Star className="w-12 h-12 text-amber-500/40" />
+                  </div>
+                </div>
+                
+                {/* Decorative elements */}
+                <div className="absolute top-0 right-1/4 w-4 h-4 bg-primary rounded-full animate-pulse"></div>
+                <div className="absolute bottom-1/4 left-0 w-3 h-3 bg-amber-500 rounded-full animate-pulse delay-300"></div>
+                <div className="absolute top-1/3 right-0 w-2 h-2 bg-primary rounded-full animate-pulse delay-500"></div>
               </div>
             </div>
           </div>
         </div>
+        
+        {/* Bottom gradient overlay */}
+        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background to-transparent"></div>
       </section>
 
-      {/* Stats Section */}
-      <section className="px-4 md:px-8 py-16 bg-card border-b border-border">
-        <div className="max-w-6xl mx-auto grid md:grid-cols-4 gap-8">
-          <div className="text-center">
-            <div className="flex justify-center mb-3">
-              <BookOpen className="w-8 h-8 text-primary" aria-hidden="true" />
-            </div>
-            <h3 className="text-3xl font-bold text-foreground mb-1">
-              {stats.totalReviews > 0 ? `${stats.totalReviews}+` : '0'}
-            </h3>
-            <p className="text-muted-foreground">Book Reviews</p>
-          </div>
-          <div className="text-center">
-            <div className="flex justify-center mb-3">
-              <Users className="w-8 h-8 text-primary" aria-hidden="true" />
-            </div>
-            <h3 className="text-3xl font-bold text-foreground mb-1">
-              {stats.activeUsers > 0 ? `${(stats.activeUsers / 1000).toFixed(stats.activeUsers >= 1000 ? 1 : 0)}K+` : '0'}
-            </h3>
-            <p className="text-muted-foreground">Active Readers</p>
-          </div>
-          <div className="text-center">
-            <div className="flex justify-center mb-3">
-              <Star className="w-8 h-8 text-accent" aria-hidden="true" />
-            </div>
-            <h3 className="text-3xl font-bold text-foreground mb-1">{stats.averageRating}</h3>
-            <p className="text-muted-foreground">Average Rating</p>
-          </div>
-          <div className="text-center">
-            <div className="flex justify-center mb-3">
-              <TrendingUp className="w-8 h-8 text-primary" aria-hidden="true" />
-            </div>
-            <h3 className="text-3xl font-bold text-foreground mb-1">
-              {stats.totalGenres > 0 ? `${stats.totalGenres}+` : '0'}
-            </h3>
-            <p className="text-muted-foreground">Genres</p>
-          </div>
-        </div>
-      </section>
+    
 
       {/* Featured Reviews */}
       <section className="px-4 md:px-8 py-16">
@@ -521,6 +549,46 @@ export default async function HomePage() {
               <p className="text-muted-foreground mb-4 italic">"The community here is amazing. I've connected with so many fellow readers who share my passion for great books."</p>
               <p className="font-semibold text-foreground">- Emily K., Book Club Organizer</p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="px-4 md:px-8 py-16 bg-card border-b border-border">
+        <div className="max-w-6xl mx-auto grid md:grid-cols-4 gap-8">
+          <div className="text-center">
+            <div className="flex justify-center mb-3">
+              <BookOpen className="w-8 h-8 text-primary" aria-hidden="true" />
+            </div>
+            <h3 className="text-3xl font-bold text-foreground mb-1">
+              {stats.totalReviews > 0 ? (stats.totalReviews >= 1000 ? `${(stats.totalReviews / 1000).toFixed(1)}K+` : `${stats.totalReviews}+`) : '0.1K+'}
+            </h3>
+            <p className="text-muted-foreground">Book Reviews</p>
+          </div>
+          <div className="text-center">
+            <div className="flex justify-center mb-3">
+              <Users className="w-8 h-8 text-primary" aria-hidden="true" />
+            </div>
+            <h3 className="text-3xl font-bold text-foreground mb-1">
+              {stats.activeUsers > 0 ? (stats.activeUsers >= 1000 ? `${(stats.activeUsers / 1000).toFixed(1)}K+` : `${stats.activeUsers}+`) : '0.1K+'}
+            </h3>
+            <p className="text-muted-foreground">Active Readers</p>
+          </div>
+          <div className="text-center">
+            <div className="flex justify-center mb-3">
+              <Star className="w-8 h-8 text-accent" aria-hidden="true" />
+            </div>
+            <h3 className="text-3xl font-bold text-foreground mb-1">{stats.averageRating || '4.9'}</h3>
+            <p className="text-muted-foreground">Average Rating</p>
+          </div>
+          <div className="text-center">
+            <div className="flex justify-center mb-3">
+              <TrendingUp className="w-8 h-8 text-primary" aria-hidden="true" />
+            </div>
+            <h3 className="text-3xl font-bold text-foreground mb-1">
+              {stats.totalGenres > 0 ? `${stats.totalGenres}+` : '5+'}
+            </h3>
+            <p className="text-muted-foreground">Genres</p>
           </div>
         </div>
       </section>

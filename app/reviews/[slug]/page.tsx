@@ -25,10 +25,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   return {
     title: {
-      default: `Book Review: ${title} by ${author} (${year}) | girlwholiketoreadbooks`,
+      default: `${title} by ${author} - Book Review`,
       template: '%s | girlwholiketoreadbooks'
     },
-    description: `Read our in-depth book review of "${title}" by ${author}, a ${genre} novel published in ${year}. Discover our honest critique and rating.`,
+    description: `Honest book review of "${title}" by ${author}. ${genre} novel from ${year}. Discover our rating and thoughts on this book.`,
     keywords: [
       'book review',
       title,
@@ -38,8 +38,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       `${genre} book review`,
       `published ${year}`,
       'book critique',
-      'literary review',
-      `${genre} novels`
+      'literary review'
     ],
     authors: [{ name: 'girlwholiketoreadbooks' }],
     creator: 'girlwholiketoreadbooks',
@@ -60,8 +59,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       locale: 'en_US',
       url: canonicalUrl,
       siteName: 'girlwholiketoreadbooks',
-      title: `Book Review: ${title} by ${author}`,
-      description: `Read our honest and detailed book review of "${title}" by ${author}. ${genre} novel from ${year}.`,
+      title: `${title} by ${author} - Book Review`,
+      description: `Read our honest book review of "${title}" by ${author}. ${genre} novel from ${year}.`,
       images: [
         {
           url: '/book-reading.jpeg',
@@ -73,7 +72,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     },
     twitter: {
       card: 'summary_large_image',
-      title: `Book Review: ${title} by ${author}`,
+      title: `${title} by ${author} - Book Review`,
       description: `Read our honest review of "${title}" by ${author}. ${genre}, ${year}.`,
       images: ['/book-reading.jpeg'],
       creator: '@girlwholiketoreadbooks',
