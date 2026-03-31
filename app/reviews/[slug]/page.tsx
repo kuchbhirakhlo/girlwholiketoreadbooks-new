@@ -14,6 +14,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     return {
       title: 'Loading Review | girlwholiketoreadbooks',
       description: 'Loading book review...',
+      keywords: ['book review', 'book reviews', 'reading', 'literature', 'book blog', 'book recommendations'],
     };
   }
 
@@ -23,25 +24,63 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://girlwholiketoreadbooks.in';
   const canonicalUrl = `${baseUrl}/reviews/${slug}`;
 
+  // Enhanced keywords for better SEO ranking
+  const enhancedKeywords = [
+    // Primary keywords
+    'book review',
+    'book reviews',
+    'book rating',
+    'book critique',
+    'literary review',
+    // Book specific
+    title,
+    author,
+    `${title} review`,
+    `${title} book review`,
+    `${author} books`,
+    `${author} novel`,
+    `${author} author`,
+    // Genre specific
+    `${genre} book review`,
+    `${genre} novels`,
+    `${genre} books`,
+    `${genre} fiction`,
+    // Publication year
+    `published ${year}`,
+    `books published ${year}`,
+    // Long-tail keywords
+    'honest book review',
+    'book review and rating',
+    'best book reviews',
+    'book recommendations',
+    'what to read next',
+    'book blog india',
+    'indian book reviewer',
+    'priya singh book reviews',
+    'girl who likes to read books',
+    'book review website',
+    'online book reviews',
+    'book critique and analysis',
+    'detailed book review',
+    'book review with rating',
+    // Genre variations
+    `${genre.toLowerCase()} book recommendations`,
+    `best ${genre.toLowerCase()} books`,
+    `${genre.toLowerCase()} novels to read`,
+  ];
+
+  // Generate description with more details
+  const description = `Honest and detailed book review of "${title}" by ${author}. ${genre} novel published in ${year}. Get our rating, detailed analysis, and discover if this book is worth your time. Find similar ${genre.toLowerCase()} book reviews and recommendations.`;
+
   return {
     title: {
-      default: `${title} by ${author} - Book Review`,
+      default: `${title} by ${author} - Book Review | girlwholiketoreadbooks`,
       template: '%s | girlwholiketoreadbooks'
     },
-    description: `Honest book review of "${title}" by ${author}. ${genre} novel from ${year}. Discover our rating and thoughts on this book.`,
-    keywords: [
-      'book review',
-      title,
-      author,
-      `${title} review`,
-      `${author} books`,
-      `${genre} book review`,
-      `published ${year}`,
-      'book critique',
-      'literary review'
-    ],
-    authors: [{ name: 'girlwholiketoreadbooks' }],
-    creator: 'girlwholiketoreadbooks',
+    description: description,
+    keywords: enhancedKeywords,
+    authors: [{ name: 'Priya Singh', url: 'https://www.instagram.com/girlwholiketoreadbooks' }],
+    creator: 'Priya Singh',
     publisher: 'girlwholiketoreadbooks',
     robots: {
       index: true,
@@ -59,28 +98,33 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       locale: 'en_US',
       url: canonicalUrl,
       siteName: 'girlwholiketoreadbooks',
-      title: `${title} by ${author} - Book Review`,
-      description: `Read our honest book review of "${title}" by ${author}. ${genre} novel from ${year}.`,
+      title: `${title} by ${author} - Book Review | girlwholiketoreadbooks`,
+      description: description,
       images: [
         {
           url: '/book-reading.jpeg',
           width: 1200,
           height: 630,
-          alt: `Cover of ${title} by ${author}`,
+          alt: `Cover of ${title} by ${author} - Book Review`,
         },
       ],
     },
     twitter: {
       card: 'summary_large_image',
       title: `${title} by ${author} - Book Review`,
-      description: `Read our honest review of "${title}" by ${author}. ${genre}, ${year}.`,
+      description: description,
       images: ['/book-reading.jpeg'],
       creator: '@girlwholiketoreadbooks',
+      site: '@girlwholiketoreadbooks',
     },
     alternates: {
       canonical: canonicalUrl,
+      languages: {
+        'en-US': canonicalUrl,
+      },
     },
     category: genre,
+    classification: 'Book Reviews',
   };
 }
 

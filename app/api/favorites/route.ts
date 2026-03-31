@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { postId, userId } = body;
+    const { postId, userId, type } = body;
 
     if (!postId || !userId) {
       return NextResponse.json(
@@ -23,7 +23,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if already favorited
+    // Default type is 'like' if not specified
+    const favoriteType = type || 'like';
+
+    // Check if already favorited with same type
     const { getDocs, query, where, addDoc, collection, serverTimestamp } = require('firebase-admin/firestore');
     
     const favoritesRef = collection(db, 'favorites');
@@ -31,13 +34,14 @@ export async function POST(request: NextRequest) {
       query(
         favoritesRef,
         where('postId', '==', postId),
-        where('userId', '==', userId)
+        where('userId', '==', userId),
+        where('type', '==', favoriteType)
       )
     );
 
     if (existingFavorite.docs.length > 0) {
       return NextResponse.json(
-        { error: 'Already favorited' },
+        { error: `Already ${favoriteType}d` },
         { status: 400 }
       );
     }
@@ -45,6 +49,7 @@ export async function POST(request: NextRequest) {
     const favoriteRef = await addDoc(favoritesRef, {
       postId,
       userId,
+      type: favoriteType,
       createdAt: serverTimestamp(),
     });
 
@@ -113,7 +118,7 @@ export async function DELETE(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { postId, userId } = body;
+    const { postId, userId, type } = body;
 
     if (!postId || !userId) {
       return NextResponse.json(
@@ -125,13 +130,27 @@ export async function DELETE(request: NextRequest) {
     const { getDocs, query, where, collection, deleteDoc } = require('firebase-admin/firestore');
     
     const favoritesRef = collection(db, 'favorites');
-    const favorite = await getDocs(
-      query(
+    
+    // If type is specified, delete only that type; otherwise delete any
+    let q;
+    if (type) {
+      q = query(
         favoritesRef,
         where('postId', '==', postId),
-        where('userId', '==', userId)
-      )
-    );
+        where('userId', '==', userId),
+        where('type', '==', type)
+      );
+    } else {
+      // Default to 'like' type for backward compatibility
+      q = query(
+        favoritesRef,
+        where('postId', '==', postId),
+        where('userId', '==', userId),
+        where('type', '==', 'like')
+      );
+    }
+    
+    const favorite = await getDocs(q);
 
     if (favorite.docs.length === 0) {
       return NextResponse.json(

@@ -26,27 +26,8 @@ export default function PageViewTracker(): null {
         const pageViewsRef = collection(firestoreDb, 'pageViews');
         const today = new Date().toISOString().split('T')[0];
         
-        // Track homepage views specifically for "Active Readers" count
-        const isHomepage = pathname === '/' || pathname === '/index';
-        
-        if (isHomepage) {
-          const homeQuery = query(pageViewsRef, where('date', '==', today), where('page', '==', 'home'));
-          const homeSnapshot = await getDocs(homeQuery);
-          
-          if (homeSnapshot.empty) {
-            await addDoc(pageViewsRef, {
-              date: today,
-              page: 'home',
-              views: 1,
-              createdAt: Timestamp.now()
-            });
-          } else {
-            const docRef = doc(firestoreDb, 'pageViews', homeSnapshot.docs[0].id);
-            await updateDoc(docRef, { views: increment(1) });
-          }
-        }
-        
-        // Also track general page views
+        // Track general page views only (not homepage for "active readers" count)
+        // The active readers count now comes from unique users in favorites/comments
         const q = query(pageViewsRef, where('date', '==', today), where('page', '==', 'all'));
         const snapshot = await getDocs(q);
         

@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
+import Image from 'next/image';
 
 interface Post {
   id: string;
@@ -84,11 +85,21 @@ export default function ProfilePage() {
         <Card className="bg-card border-border mb-12">
           <CardContent className="pt-8">
             <div className="flex flex-col md:flex-row items-start md:items-center gap-8 mb-6">
-              <div className="w-24 h-24 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-3xl font-bold text-primary-foreground">
-                  {(user.displayName || user.email || 'U')[0].toUpperCase()}
-                </span>
-              </div>
+              {user.photoURL ? (
+                <Image
+                  src={user.photoURL}
+                  alt={user.displayName || 'User'}
+                  width={96}
+                  height={96}
+                  className="w-24 h-24 rounded-full object-cover border-4 border-primary"
+                />
+              ) : (
+                <div className="w-24 h-24 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-3xl font-bold text-primary-foreground">
+                    {(user.displayName || user.email || 'U')[0].toUpperCase()}
+                  </span>
+                </div>
+              )}
               <div className="flex-1">
                 <h1 className="text-3xl font-serif font-bold text-foreground mb-2">
                   {user.displayName || user.email?.split('@')[0] || 'Anonymous'}

@@ -2,34 +2,58 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // HELPER FUNCTIONS
+    // ═══════════════════════════════════════════════════════════════════════════
+    // HELPER FUNCTIONS (REUSABLE)
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    // Check if user is authenticated
     function isAuthenticated() {
       return request.auth != null;
     }
 
-    function getAuthorRole() {
-      return isAuthenticated() ? 
-        (resource.data != null ? resource.data.authorRole : request.resource.data.authorRole) : 
-        null;
+    // Safely get user document - returns null if not found
+    function getUserData(uid) {
+      return get(/databases/$(database)/documents/users/$(uid)).data;
     }
 
+    // Get user's role safely - returns null if user document doesn't exist
+    function getUserRole() {
+      return isAuthenticated() && getUserData(request.auth.uid) != null 
+        ? getUserData(request.auth.uid).role : null;
+    }
+
+    // Get post data safely - returns null if not found
+    function getPostData(postId) {
+      return get(/databases/$(database)/documents/posts/$(postId)).data;
+    }
+
+    // Check if user is admin - strict role check
     function isAdmin() {
-      return isAuthenticated() && getAuthorRole() == 'admin';
+      return isAuthenticated() && getUserRole() == 'admin';
     }
 
+    // Check if user is editor (NOT admin - separate check)
     function isEditor() {
-      return isAuthenticated() && getAuthorRole() == 'editor';
+      return isAuthenticated() && getUserRole() == 'editor';
     }
 
+    // Check if user is either admin or editor
     function isStaff() {
       return isAuthenticated() && 
-             (getAuthorRole() == 'admin' || getAuthorRole() == 'editor');
+             (getUserRole() == 'admin' || getUserRole() == 'editor');
     }
 
+    // Check if user owns a resource by comparing IDs
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
+    // Check if current user can publish content (admin only)
+    function canPublish() {
+      return isAdmin();
+    }
+
+    // Validate required post fields exist and are valid types
     function hasValidPostFields() {
       let data = request.resource.data;
       return data.title is string
@@ -48,7 +72,7 @@ service cloud.firestore {
           && data.genre is list
           && data.genre.size() >= 1
           && data.genre.size() <= 5
-          && data.rating is number
+          && data.rating is int
           && data.rating >= 1
           && data.rating <= 5
           && data.status in ['draft', 'review', 'published']
@@ -56,25 +80,40 @@ service cloud.firestore {
           && data.authorRole in ['admin', 'editor'];
     }
 
+    // Validate status transition - editors cannot publish
     function hasValidStatusTransition() {
       let newStatus = request.resource.data.status;
-      let currentUserRole = getAuthorRole();
+      let currentUserRole = getUserRole();
+      
+      // Editors can only set draft or review, admins can set any status
       return currentUserRole == 'editor' 
         ? newStatus in ['draft', 'review']
         : newStatus in ['draft', 'review', 'published'];
     }
 
+    // Validate user role enum
     function hasValidRole() {
       return request.resource.data.role in ['admin', 'editor'];
     }
 
+    // Validate timestamp is present and valid
     function hasValidTimestamps(hasCreated, hasUpdated) {
       return !hasCreated && !hasUpdated ? true :
              hasCreated ? request.resource.data.createdAt is timestamp :
              request.resource.data.updatedAt is timestamp;
     }
 
+    // Check if trying to escalate editor to admin (security breach prevention)
+    function isRoleEscalationAttempt() {
+      // If updating role field and setting to admin while current user is editor
+      // This prevents editors from elevating themselves
+      return request.resource.data.role == 'admin' && 
+             getUserRole() != 'admin';
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
     // PAGE VIEWS COLLECTION - Public read/write for analytics
+    // ═══════════════════════════════════════════════════════════════════════════
     match /pageViews/{pageViewId} {
       allow read: if true;
       allow write: if request.resource.data.keys().hasAll(['date', 'page', 'views', 'createdAt'])
@@ -84,70 +123,135 @@ service cloud.firestore {
                    && request.resource.data.views >= 0;
     }
 
+    // ═══════════════════════════════════════════════════════════════════════════
     // USERS COLLECTION
+    // ═══════════════════════════════════════════════════════════════════════════
+    
     match /users/{userId} {
-      allow read: if isAuthenticated() && (isAdmin() || isOwner(userId));
-      allow create: if isAdmin() 
-                    || (isOwner(userId) && request.resource.data.role == 'reader');
+      
+      // READ: Admins can read any user profile, Editors can read ONLY their own profile
+      allow read: if isAdmin() || isOwner(userId);
+      
+      // CREATE: Only admins can create users (no public signup flow)
+      // Validates all required fields and role
+      allow create: if isAdmin()
+                    && request.resource.data.name is string
+                    && request.resource.data.name.size() >= 2
+                    && request.resource.data.email is string
+                    && request.resource.data.email.size() >= 5
+                    && hasValidRole()
+                    && request.resource.data.isActive == true
+                    && request.resource.data.createdAt is timestamp;
+      
+      // UPDATE: Only admins can update users
+      // Prevent editors from escalating to admin
       allow update: if isAdmin()
-                    || (isOwner(userId) && request.resource.data.role == 'reader' && !request.resource.data.keys().hasAny(['role']));
+                    && (!request.resource.data.keys().hasAll(['role']) 
+                        || !isRoleEscalationAttempt());
+      
+      // DELETE: Only admins can delete users
       allow delete: if isAdmin();
     }
 
+    // ═══════════════════════════════════════════════════════════════════════════
     // POSTS COLLECTION
+    // ═══════════════════════════════════════════════════════════════════════════
+    
     match /posts/{postId} {
-      allow read: if resource != null 
-                  && ((resource.data.status == 'published') || isStaff() || !isAuthenticated());
       
-      allow create: if isStaff() && isOwner(request.resource.data.authorId) 
+      // READ: Public can read ONLY published posts, Staff can read ALL posts
+      allow read: if resource != null 
+                  && (
+                    (resource.data.status == 'published')  // Public read
+                    || isStaff()                           // Admin/Editor read all
+                  );
+      
+      // CREATE: Only authenticated staff can create posts
+      // Must be the author, must have valid fields, Editors cannot publish on create
+      allow create: if isStaff()
+                    && isOwner(request.resource.data.authorId)
                     && hasValidPostFields()
                     && hasValidTimestamps(true, false)
                     && hasValidStatusTransition();
       
+      // UPDATE: Admin can update ANY post, Editor can update ONLY their own posts
+      // Must maintain valid status transitions
       allow update: if (isAdmin() || (isEditor() && isOwner(resource.data.authorId)))
                     && hasValidPostFields()
                     && hasValidTimestamps(false, true)
                     && hasValidStatusTransition()
-                    && request.resource.data.authorId == resource.data.authorId;
+                    // Prevent removing authorId or changing to another user
+                    && request.resource.data.authorId == resource.data.authorId
+                    // Prevent role change on update
+                    && (!request.resource.data.keys().hasAll(['authorRole']) 
+                        || request.resource.data.authorRole == resource.data.authorRole);
       
+      // DELETE: Admin can delete ANY post, Editor can delete ONLY their own posts
       allow delete: if isAdmin() || (isEditor() && isOwner(resource.data.authorId));
     }
 
+    // ═══════════════════════════════════════════════════════════════════════════
     // COMMENTS COLLECTION
+    // ═══════════════════════════════════════════════════════════════════════════
+    
     match /comments/{commentId} {
-      allow read: if true; // Public read access for comments
+      // READ: Public can read approved comments on published posts
+      allow read: if isStaff() 
+                  || (resource.data.isApproved == true 
+                      && getPostData(resource.data.postId).status == 'published');
+      
+      // CREATE: Authenticated users can create comments
       allow create: if isAuthenticated()
+                    && request.resource.data.postId is string
                     && request.resource.data.content is string
                     && request.resource.data.content.size() >= 1
                     && request.resource.data.content.size() <= 1000
-                    && request.resource.data.postId is string
+                    && request.resource.data.authorName is string
                     && request.resource.data.userId is string
-                    && request.resource.data.userName is string;
-      allow update: if isAuthenticated() && isOwner(resource.data.userId);
-      allow delete: if isAuthenticated() && (isOwner(resource.data.userId) || isAdmin());
+                    && request.resource.data.userId == request.auth.uid;
+      
+      // UPDATE: Only admin or comment owner can update (must be owner via userId)
+      allow update: if isAdmin() 
+                    || (isAuthenticated() && resource.data.userId == request.auth.uid);
+      
+      // DELETE: Only admin or comment owner can delete
+      allow delete: if isAdmin() 
+                    || (isAuthenticated() && resource.data.userId == request.auth.uid);
     }
 
-    // FAVORITES COLLECTION
-    match /favorites/{favoriteId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated()
-                    && request.resource.data.postId is string
-                    && request.resource.data.userId is string
-                    && request.auth.uid == request.resource.data.userId;
-      allow delete: if isAuthenticated() && request.auth.uid == resource.data.userId;
+    // ═══════════════════════════════════════════════════════════════════════════
+    // FAVORITES COLLECTION - Using userId as document ID for ownership
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    match /favorites/{userId} {
+      // Only the owner can read their favorites - use document ID not resource data
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow create: if isAuthenticated() 
+                   && request.auth.uid == userId
+                   && request.resource.data.postId is string
+                   && request.resource.data.createdAt is timestamp;
+      allow delete: if isAuthenticated() && request.auth.uid == userId;
     }
 
+    // ═══════════════════════════════════════════════════════════════════════════
     // GALLERY COLLECTION
+    // ═══════════════════════════════════════════════════════════════════════════
+    
     match /gallery/{galleryId} {
-      allow read: if true; // Public read access for gallery
-      allow create: if isAuthenticated() && isAdmin();
-      allow update: if isAuthenticated() && isAdmin();
-      allow delete: if isAuthenticated() && isAdmin();
+      // Public read access for gallery
+      allow read: if true;
+      // Only admin can create/update/delete gallery items
+      allow create, update, delete: if isAuthenticated() && isAdmin();
     }
 
-    // Catch-all for other collections - allow authenticated access by default
+    // ═══════════════════════════════════════════════════════════════════════════
+    // CATCH-ALL RULE (DENY ALL)
+    // ═══════════════════════════════════════════════════════════════════════════
+    // This ensures no unexpected collection access
+    
     match /{path=**} {
-      allow read, write: if isAuthenticated();
+      allow read, write: if false;  // Deny all by default
     }
+
   }
 }

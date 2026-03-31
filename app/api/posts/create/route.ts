@@ -14,6 +14,28 @@ const firebaseConfig = {
 const app = getApps().length > 0 ? getApps()[0] : initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// Helper function to automatically add book cover to gallery
+async function addToGallery(imageUrl: string, bookTitle: string, authorName: string) {
+  if (!imageUrl || !bookTitle) return;
+  
+  try {
+    const galleryData = {
+      imageUrl,
+      title: `Book Cover: ${bookTitle}`,
+      description: `Book cover for "${bookTitle}" by ${authorName}`,
+      bookTitle: bookTitle,
+      createdAt: serverTimestamp(),
+      postType: 'bookCover', // Mark as auto-generated from post
+    };
+
+    await addDoc(collection(db, 'gallery'), galleryData);
+    console.log('Book cover automatically added to gallery:', bookTitle);
+  } catch (error) {
+    console.error('Error auto-adding to gallery:', error);
+    // Don't fail the post creation if gallery add fails
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -151,6 +173,13 @@ export async function POST(request: NextRequest) {
     // Use addDoc with the authenticated context if ID token provided
     // Otherwise, try without (for testing with permissive rules)
     const docRef = await addDoc(collection(db, 'posts'), postData);
+
+    // Automatically add book cover to gallery if provided
+    if (bookCover) {
+      const bookTitleValue = bookTitle || title;
+      const authorValue = authorName || finalAuthorName;
+      await addToGallery(bookCover, bookTitleValue, authorValue);
+    }
 
     return NextResponse.json({
       id: docRef.id,

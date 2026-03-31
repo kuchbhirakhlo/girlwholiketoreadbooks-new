@@ -1,92 +1,10 @@
-╔══════════════════════════════════════════════════════════════════════════════╗
-║                  FIREBASE FIRESTORE SECURITY RULES                           ║
-║                  Book Review Platform - Production Ready                     ║
-╚══════════════════════════════════════════════════════════════════════════════╝
-
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                        FIRESTORE COLLECTIONS OVERVIEW                        │
-└─────────────────────────────────────────────────────────────────────────────┘
-
-1️⃣  users/{userId}
-    └─ Stores user profiles with role-based access control
-    └─ Only admins can manage users (no public signup)
-    └─ Pre-created admin accounts in Firebase Auth
-
-2️⃣  posts/{postId}
-    └─ Stores book review posts with full CRUD operations
-    └─ Supports draft/review/published workflow
-    └─ Public read access ONLY for published content
-
-3️⃣  comments/{commentId} [FUTURE - RULES READY]
-    └─ Post comments with approval workflow
-    └─ Rules defined but feature disabled per requirements
-
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                     DETAILED FIELD DESCRIPTIONS                              │
-└─────────────────────────────────────────────────────────────────────────────┘
-
-📁 COLLECTION: users/{userId}
-
-   FIELD          TYPE              REQUIRED  DESCRIPTION
-   ─────────────────────────────────────────────────────────────────────────
-   name           string            ✓         Full display name
-   email          string            ✓         Email address (unique)
-   role           "admin"|"editor"  ✓         System role for access control
-   createdAt      timestamp         ✓         Account creation timestamp
-   isActive       boolean           ✓         Account active status (soft delete)
-
-   ─────────────────────────────────────────────────────────────────────────
-   INDEXES: role (for queries), createdAt (sorting)
-   VALIDATION: email format, role enum, name min 2 chars
-
-📁 COLLECTION: posts/{postId}
-
-   FIELD          TYPE              REQUIRED  DESCRIPTION
-   ─────────────────────────────────────────────────────────────────────────
-   title          string            ✓         Review post title
-   slug           string            ✓         URL-friendly identifier (unique)
-   excerpt        string            ✓         Short description (max 300 chars)
-   content        string            ✓         Full review content (HTML/Markdown)
-   bookTitle      string            ✓         Book being reviewed
-   authorName     string            ✓         Review author display name
-   genre          array             ✓         Array of genre strings
-   rating         number            ✓         1-5 star rating
-   coverImage     string            ?         Book cover URL (optional)
-   status         enum              ✓         "draft"|"review"|"published"
-   authorId       string            ✓         User ID of post author
-   authorRole     "admin"|"editor"  ✓         Role at time of creation
-   createdAt      timestamp         ✓         Initial creation timestamp
-   updatedAt      timestamp         ✓         Last modification timestamp
-
-   ─────────────────────────────────────────────────────────────────────────
-   VALIDATION: 
-   - rating: 1-5 integer only
-   - slug: lowercase, hyphenated, unique
-   - genre: max 5 items, valid genre strings
-   - content: min 50 chars (no empty posts)
-   - excerpt: max 300 chars
-
-📁 COLLECTION: comments/{commentId} [FUTURE - RULES DEFINED]
-
-   FIELD          TYPE              REQUIRED  DESCRIPTION
-   ─────────────────────────────────────────────────────────────────────────
-   postId         string            ✓         Parent post reference
-   authorName     string            ✓         Comment author name
-   content        string            ✓         Comment text
-   createdAt      timestamp         ✓         Comment timestamp
-   isApproved     boolean           ?         Moderation status
-
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                         FIREBASE SECURITY RULES                              │
-└─────────────────────────────────────────────────────────────────────────────┘
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ═══════════════════════════════════════════════════════════════════════
-    //                    HELPER FUNCTIONS (REUSABLE)
-    // ═══════════════════════════════════════════════════════════════════════
+    // ═══════════════════════════════════════════════════════════════════════════
+    // HELPER FUNCTIONS (REUSABLE)
+    // ═══════════════════════════════════════════════════════════════════════════
 
     // Check if user is authenticated
     function isAuthenticated() {
@@ -100,7 +18,8 @@ service cloud.firestore {
 
     // Get user's role safely - returns null if user document doesn't exist
     function getUserRole() {
-      return isAuthenticated() ? getUserData(request.auth.uid).role : null;
+      return isAuthenticated() && getUserData(request.auth.uid) != null 
+        ? getUserData(request.auth.uid).role : null;
     }
 
     // Get post data safely - returns null if not found
@@ -166,12 +85,10 @@ service cloud.firestore {
       let newStatus = request.resource.data.status;
       let currentUserRole = getUserRole();
       
-      // Editors can only set draft or review
-      if (currentUserRole == 'editor') {
-        return newStatus in ['draft', 'review'];
-      }
-      // Admins can set any status
-      return newStatus in ['draft', 'review', 'published'];
+      // Editors can only set draft or review, admins can set any status
+      return currentUserRole == 'editor' 
+        ? newStatus in ['draft', 'review']
+        : newStatus in ['draft', 'review', 'published'];
     }
 
     // Validate user role enum
@@ -181,37 +98,39 @@ service cloud.firestore {
 
     // Validate timestamp is present and valid
     function hasValidTimestamps(hasCreated, hasUpdated) {
-      if (hasCreated) {
-        return request.resource.data.createdAt is timestamp;
-      }
-      if (hasUpdated) {
-        return request.resource.data.updatedAt is timestamp;
-      }
-      return true;
+      return !hasCreated && !hasUpdated ? true :
+             hasCreated ? request.resource.data.createdAt is timestamp :
+             request.resource.data.updatedAt is timestamp;
     }
 
     // Check if trying to escalate editor to admin (security breach prevention)
     function isRoleEscalationAttempt() {
-      // If updating role field and setting to admin while current user is editor
-      // This prevents editors from elevating themselves
       return request.resource.data.role == 'admin' && 
              getUserRole() != 'admin';
     }
 
-    // ═══════════════════════════════════════════════════════════════════════
-    //                         USERS COLLECTION
-    // ═══════════════════════════════════════════════════════════════════════
+    // ═══════════════════════════════════════════════════════════════════════════
+    // PAGE VIEWS COLLECTION - Public read/write for analytics
+    // ═══════════════════════════════════════════════════════════════════════════
+    match /pageViews/{pageViewId} {
+      allow read: if true;
+      allow write: if request.resource.data.keys().hasAll(['date', 'page', 'views', 'createdAt'])
+                   && request.resource.data.date is string
+                   && request.resource.data.page is string
+                   && request.resource.data.views is number
+                   && request.resource.data.views >= 0;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // USERS COLLECTION
+    // ═══════════════════════════════════════════════════════════════════════════
     
     match /users/{userId} {
       
-      // ═══ READ ═══
-      // Admins can read any user profile
-      // Editors can read ONLY their own profile (for personalization)
-      // Public/Readers: NO ACCESS
+      // READ: Admins can read any user profile, Editors can read ONLY their own profile
       allow read: if isAdmin() || isOwner(userId);
       
-      // ═══ CREATE ═══
-      // Only admins can create users (no public signup flow)
+      // CREATE: Only admins can create users (no public signup flow)
       // Validates all required fields and role
       allow create: if isAdmin()
                     && request.resource.data.name is string
@@ -222,50 +141,38 @@ service cloud.firestore {
                     && request.resource.data.isActive == true
                     && request.resource.data.createdAt is timestamp;
       
-      // ═══ UPDATE ═══
-      // Only admins can update users
+      // UPDATE: Only admins can update users
       // Prevent editors from escalating to admin
-      // Prevent disabling admin accounts (optional protection)
       allow update: if isAdmin()
                     && (!request.resource.data.keys().hasAll(['role']) 
                         || !isRoleEscalationAttempt());
       
-      // ═══ DELETE ═══
-      // Only admins can delete users
-      // Consider using isActive=false for soft delete instead
+      // DELETE: Only admins can delete users
       allow delete: if isAdmin();
     }
 
-    // ═══════════════════════════════════════════════════════════════════════
-    //                         POSTS COLLECTION
-    // ═══════════════════════════════════════════════════════════════════════
+    // ═══════════════════════════════════════════════════════════════════════════
+    // POSTS COLLECTION
+    // ═══════════════════════════════════════════════════════════════════════════
     
     match /posts/{postId} {
       
-      // ═══ READ ═══
-      // Public: Can read ONLY published posts (no authentication required)
-      // Staff: Can read ALL posts (drafts, reviews, published)
+      // READ: Public can read ONLY published posts, Staff can read ALL posts
       allow read: if resource != null 
                   && (
                     (resource.data.status == 'published')  // Public read
                     || isStaff()                           // Admin/Editor read all
                   );
       
-      // ═══ CREATE ═══
-      // Only authenticated staff (admin/editor) can create posts
-      // Must be the author of the post
-      // Must have valid post fields
-      // Editors cannot publish on create
+      // CREATE: Only authenticated staff can create posts
+      // Must be the author, must have valid fields, Editors cannot publish on create
       allow create: if isStaff()
                     && isOwner(request.resource.data.authorId)
                     && hasValidPostFields()
                     && hasValidTimestamps(true, false)
                     && hasValidStatusTransition();
       
-      // ═══ UPDATE ═══
-      // Admin: Can update ANY post (full access)
-      // Editor: Can update ONLY their own posts
-      // Cannot delete through update (use delete operation)
+      // UPDATE: Admin can update ANY post, Editor can update ONLY their own posts
       // Must maintain valid status transitions
       allow update: if (isAdmin() || (isEditor() && isOwner(resource.data.authorId)))
                     && hasValidPostFields()
@@ -273,75 +180,71 @@ service cloud.firestore {
                     && hasValidStatusTransition()
                     // Prevent removing authorId or changing to another user
                     && request.resource.data.authorId == resource.data.authorId
-                    // Prevent role change on update (should be separate operation)
+                    // Prevent role change on update
                     && (!request.resource.data.keys().hasAll(['authorRole']) 
                         || request.resource.data.authorRole == resource.data.authorRole);
       
-      // ═══ DELETE ═══
-      // Admin: Can delete ANY post
-      // Editor: Can delete ONLY their own posts
-      // Readers: NO ACCESS
+      // DELETE: Admin can delete ANY post, Editor can delete ONLY their own posts
       allow delete: if isAdmin() || (isEditor() && isOwner(resource.data.authorId));
     }
 
-    // ═══════════════════════════════════════════════════════════════════════
-    //                    COMMENTS COLLECTION (FUTURE)
-    // ═══════════════════════════════════════════════════════════════════════
-    // Rules are defined but feature is disabled per requirements
-    // Enable when implementing comments functionality
+    // ═══════════════════════════════════════════════════════════════════════════
+    // COMMENTS COLLECTION
+    // ═══════════════════════════════════════════════════════════════════════════
     
     match /comments/{commentId} {
-      
-      // ═══ READ ═══
-      // Currently disabled - readers have NO access
-      // When enabled: Staff can read all, public can read approved only
-      allow read: if false;  // Disabled for now
-      
-      // ═══ CREATE ═══
-      // Currently disabled - no public writes allowed
-      allow create: if false;  // Disabled for now
-      
-      // ═══ UPDATE ═══
-      // Currently disabled
-      allow update: if false;  // Disabled for now
-      
-      // ═══ DELETE ═══
-      // Currently disabled
-      allow delete: if false;  // Disabled for now
-      
-      // ═══ FUTURE RULES (enable when comments feature is ready) ═══
-      /*
-      // Future read rule for comments:
+      // READ: Staff can read all, public can read approved comments on published posts
       allow read: if isStaff() 
                   || (resource.data.isApproved == true 
                       && getPostData(resource.data.postId).status == 'published');
       
-      // Future create rule:
+      // CREATE: Authenticated users can create comments on their own behalf
       allow create: if isAuthenticated()
                     && request.resource.data.postId is string
                     && request.resource.data.content is string
                     && request.resource.data.content.size() >= 1
                     && request.resource.data.content.size() <= 1000
-                    && request.resource.data.authorName is string;
+                    && request.resource.data.authorName is string
+                    && request.resource.data.userId is string
+                    && request.resource.data.userId == request.auth.uid;
       
-      // Future update/delete:
-      allow update, delete: if isAdmin() 
-                            || isOwner(resource.data.userId);
-      */
+      // UPDATE: Only admin or comment owner can update
+      allow update: if isAdmin() 
+                    || (isAuthenticated() && resource.data.userId == request.auth.uid);
+      
+      // DELETE: Only admin or comment owner can delete
+      allow delete: if isAdmin() 
+                    || (isAuthenticated() && resource.data.userId == request.auth.uid);
     }
 
-    // ═══════════════════════════════════════════════════════════════════════
-    //                    FAVORITES COLLECTION (IF EXISTS)
-    // ═══════════════════════════════════════════════════════════════════════
+    // ═══════════════════════════════════════════════════════════════════════════
+    // FAVORITES COLLECTION - Using userId as document ID for ownership
+    // ═══════════════════════════════════════════════════════════════════════════
     
     match /favorites/{userId} {
-      // Only the owner can access their favorites
-      allow read, write: if isOwner(userId) && isAuthenticated();
+      // Only the owner can read/write their favorites
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow create: if isAuthenticated() 
+                   && request.auth.uid == userId
+                   && request.resource.data.postId is string
+                   && request.resource.data.createdAt is timestamp;
+      allow delete: if isAuthenticated() && request.auth.uid == userId;
     }
 
-    // ═══════════════════════════════════════════════════════════════════════
-    //                    CATCH-ALL RULE (DENY ALL)
-    // ═══════════════════════════════════════════════════════════════════════
+    // ═══════════════════════════════════════════════════════════════════════════
+    // GALLERY COLLECTION
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    match /gallery/{galleryId} {
+      // Public read access for gallery
+      allow read: if true;
+      // Only admin can create/update/delete gallery items
+      allow create, update, delete: if isAuthenticated() && isAdmin();
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // CATCH-ALL RULE (DENY ALL)
+    // ═══════════════════════════════════════════════════════════════════════════
     // This ensures no unexpected collection access
     
     match /{path=**} {
@@ -350,104 +253,3 @@ service cloud.firestore {
 
   }
 }
-
-
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                    STORAGE SECURITY RULES (BONUS)                            │
-└─────────────────────────────────────────────────────────────────────────────┘
-
-/*
-Deploy these separately in Firebase Storage Console
-
-rules_version = '2';
-service firebase.storage {
-  match /b/{bucket}/o {
-    
-    // ═══ PUBLIC ASSETS ═══
-    // Book covers and images - publicly readable
-    match /public/{allPaths=**} {
-      allow read: if true;
-      allow write: if false;
-    }
-    
-    // ═══ BOOK COVERS ═══
-    // Only post author or admin can upload book covers
-    match /book-covers/{userId}/{fileName} {
-      allow read: if true;
-      allow write: if request.auth != null 
-                   && (request.auth.uid == userId || isAdmin());
-    }
-    
-    // ═══ USER AVATARS ═══
-    // Users can only upload their own avatar
-    match /avatars/{userId}/{fileName} {
-      allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == userId;
-    }
-    
-    // ═══ ADMIN UPLOADS ═══
-    // Admin-only upload folder
-    match /admin/{allPaths=**} {
-      allow read: if true;
-      allow write: if request.auth != null && isAdmin();
-    }
-  }
-}
-
-// Helper function for Storage rules
-function isAdmin() {
-  return request.auth != null 
-         && get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin';
-}
-*/
-
-
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                    IMPLEMENTATION NOTES & BEST PRACTICES                     │
-└─────────────────────────────────────────────────────────────────────────────┘
-
-🔐 SECURITY PRINCIPLES ENFORCED:
-
-1. NO PUBLIC SIGNUP
-   └── All user creation is admin-only via Firebase Console or Admin SDK
-   └── Role escalation is blocked at the rules level
-
-2. DEFENSE IN DEPTH
-   └── Server-side validation in Admin SDK recommended alongside these rules
-   └── Field-level validation prevents malformed data
-
-3. PRINCIPLE OF LEAST PRIVILEGE
-   └── Editors can only access/modify their own content
-   └── Readers have read-only access to published content only
-
-4. AUDIT TRAIL
-   └── createdAt and updatedAt timestamps track all modifications
-   └── Consider enabling Cloud Audit Logging for compliance
-
-📋 DEPLOYMENT STEPS:
-
-1. Deploy Firestore rules:
-   ```bash
-   firebase deploy --only firestore:rules
-   ```
-
-2. Create admin user manually in Firebase Console:
-   - Add user in Authentication
-   - Create document in users/{userId} with role: "admin"
-
-3. Set up Firestore indexes (firestore.indexes.json):
-   ```json
-   {
-     "collectionGroup": "posts",
-     "queryScope": "COLLECTION",
-     "fields": [
-       { "fieldPath": "status", "order": "ASCENDING" },
-       { "fieldPath": "createdAt", "order": "DESCENDING" }
-     ]
-   },
-   {
-     "collectionGroup": "posts",
-     "queryScope": "COLLECTION",
-     "fields": [
-       { "fieldPath": "authorId", "order": "ASCENDING" },
-      

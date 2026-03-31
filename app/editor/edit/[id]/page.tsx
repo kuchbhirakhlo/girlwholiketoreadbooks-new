@@ -224,6 +224,9 @@ export default function EditPostPage() {
       const dbInstance = await getDbInstance();
       if (!dbInstance) return;
 
+      const currentBookCover = post?.coverImage || '';
+      const newBookCover = data.bookCover || '';
+      
       await updateDoc(doc(dbInstance, 'posts', postId), {
         title: data.title,
         bookTitle: data.title,  // bookTitle should be the same as title (book title)
@@ -240,6 +243,25 @@ export default function EditPostPage() {
         tags: tags,
         getYourBookLink: data.getYourBookLink || null,
       });
+
+      // Auto-add to gallery if new cover image is provided and it's different from the current one
+      if (newBookCover && newBookCover !== currentBookCover) {
+        try {
+          await fetch('/api/gallery/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              imageUrl: newBookCover,
+              title: `Book Cover: ${data.title}`,
+              description: `Book cover for "${data.title}" by ${data.author}`,
+              bookTitle: data.title,
+            }),
+          });
+        } catch (galleryError) {
+          console.error('Error adding to gallery:', galleryError);
+          // Don't fail the post update if gallery add fails
+        }
+      }
 
       router.push('/admin/posts');
     } catch (error) {
@@ -258,6 +280,9 @@ export default function EditPostPage() {
       const dbInstance = await getDbInstance();
       if (!dbInstance) return;
 
+      const currentBookCover = post?.coverImage || '';
+      const newBookCover = watch('bookCover') || '';
+      
       await updateDoc(doc(dbInstance, 'posts', postId), {
         title: watch('title'),
         bookTitle: watch('title'),  // bookTitle should be the same as title (book title)
@@ -274,6 +299,25 @@ export default function EditPostPage() {
         tags: tags,
         getYourBookLink: watch('getYourBookLink') || null,
       });
+
+      // Auto-add to gallery if new cover image is provided and it's different from the current one
+      if (newBookCover && newBookCover !== currentBookCover) {
+        try {
+          await fetch('/api/gallery/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              imageUrl: newBookCover,
+              title: `Book Cover: ${watch('title')}`,
+              description: `Book cover for "${watch('title')}" by ${watch('author')}`,
+              bookTitle: watch('title'),
+            }),
+          });
+        } catch (galleryError) {
+          console.error('Error adding to gallery:', galleryError);
+          // Don't fail the draft save if gallery add fails
+        }
+      }
 
       router.push('/admin/posts');
     } catch (error) {

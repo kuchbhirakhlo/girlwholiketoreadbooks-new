@@ -103,51 +103,42 @@ export async function GET(request: NextRequest) {
       .slice(0, 8)
       .map(([name, count]) => ({ name, count }));
 
-    // Get homepage views for "active readers" - count increases on each visit/refresh
+    // Get unique users for "active readers" - count registered users who have interacted
     let activeUsers = 0;
     try {
-      const pageViewsRef = collection(firestoreDb, 'pageViews');
-      const today = new Date().toISOString().split('T')[0];
-      
-      // Get homepage-specific views (increases on each visit/refresh)
-      const homeQuery = query(pageViewsRef, where('page', '==', 'home'));
-      const homeSnapshot = await getDocs(homeQuery);
-      
-      console.log('[Stats API] Found', homeSnapshot.size, 'pageViews docs');
-      
-      homeSnapshot.docs.forEach((docSnapshot) => {
+      // Get unique users from favorites collection (users who have liked/saved posts)
+      const favoritesQuery = query(collection(firestoreDb, 'favorites'));
+      const favoritesSnapshot = await getDocs(favoritesQuery);
+      const uniqueUserIds = new Set<string>();
+      favoritesSnapshot.docs.forEach((docSnapshot) => {
         const data = docSnapshot.data();
-        console.log('[Stats API] PageViews doc:', data.date, '- views:', data.views);
-        if (data.date === today) {
-          activeUsers = data.views || 0;
+        if (data.userId) {
+          uniqueUserIds.add(data.userId);
         }
       });
       
-      console.log('[Stats API] Active users for today:', activeUsers);
+      // Also count users who have commented
+      const commentsQuery = query(collection(firestoreDb, 'comments'));
+      const commentsSnapshot = await getDocs(commentsQuery);
+      commentsSnapshot.docs.forEach((docSnapshot) => {
+        const data = docSnapshot.data();
+        if (data.userId) {
+          uniqueUserIds.add(data.userId);
+        }
+      });
       
-      // Fallback: if no views today, use last 7 days average
+      activeUsers = uniqueUserIds.size;
+      console.log('[Stats API] Unique users from favorites/comments:', activeUsers);
+      
+      // If no users yet (new platform), use a fixed base number
+      // This is static and won't increase on refresh
       if (activeUsers === 0) {
-        let totalViews7Days = 0;
-        let daysWithViews = 0;
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
-        
-        homeSnapshot.docs.forEach((docSnapshot) => {
-          const data = docSnapshot.data();
-          if (data.date >= sevenDaysAgoStr) {
-            totalViews7Days += data.views || 0;
-            daysWithViews++;
-          }
-        });
-        
-        activeUsers = daysWithViews > 0 ? Math.round(totalViews7Days / daysWithViews) : 100;
-        console.log('[Stats API] Using 7-day average:', activeUsers);
+        activeUsers = 1000; // Fixed baseline
       }
     } catch (viewsError) {
-      console.error('[Stats API] Error fetching page views:', viewsError);
-      // Use default
-      activeUsers = 100;
+      console.error('[Stats API] Error fetching unique users:', viewsError);
+      // Use fixed baseline on error
+      activeUsers = 1000;
     }
 
     return NextResponse.json({

@@ -103,40 +103,52 @@ export default function ReviewPageClient({ slug, bookInfo }: ReviewPageClientPro
     }
   };
 
-  // Generate JSON-LD for Book Review
+  // Generate enhanced JSON-LD for Book Review
   useEffect(() => {
     if (post) {
       const jsonLd: any = {
         '@context': 'https://schema.org',
         '@type': 'Review',
         headline: `Book Review: ${post.title} by ${post.author}`,
-        description: post.review.substring(0, 160) + '...',
+        description: post.review ? post.review.substring(0, 160) + '...' : `Honest book review of "${post.title}" by ${post.author}. ${post.genre} novel with rating ${post.rating}/5.`,
         datePublished: post.createdAt instanceof Date ? post.createdAt.toISOString() : new Date(post.createdAt).toISOString(),
+        dateModified: post.createdAt instanceof Date ? post.createdAt.toISOString() : new Date(post.createdAt).toISOString(),
         author: {
           '@type': 'Person',
-          name: post.userName || 'Anonymous Reviewer'
+          name: post.userName || 'Priya Singh',
+          url: 'https://www.instagram.com/girlwholiketoreadbooks',
         },
         publisher: {
           '@type': 'Organization',
-          name: 'girlwholiketoreadbooks'
+          name: 'girlwholiketoreadbooks',
+          url: 'https://girlwholiketoreadbooks.in',
         },
         reviewRating: {
           '@type': 'Rating',
           ratingValue: post.rating,
           bestRating: '5',
-          worstRating: '1'
+          worstRating: '1',
+          ratingExplanation: `${post.rating} out of 5 stars`,
         },
         itemReviewed: {
           '@type': 'Book',
           name: post.title,
           author: {
             '@type': 'Person',
-            name: post.author
+            name: post.author,
           },
           genre: post.genre,
-          datePublished: post.publicationYear ? String(post.publicationYear) : 'Unknown'
-        }
+          datePublished: post.publicationYear ? String(post.publicationYear) : 'Unknown',
+          bookEdition: post.publicationYear ? `${post.publicationYear} Edition` : 'Unknown Edition',
+        },
+        reviewBody: post.content || post.review,
+        wordCount: (post.content || post.review || '').split(/\s+/).length,
       };
+
+      // Add book cover if available
+      if (post.bookCover) {
+        jsonLd.itemReviewed.image = post.bookCover;
+      }
 
       // Add keywords/tags for SEO if available
       if (post.tags && post.tags.length > 0) {
@@ -149,13 +161,38 @@ export default function ReviewPageClient({ slug, bookInfo }: ReviewPageClientPro
         jsonLd.keywords = existingKeywords + post.tropes.join(', ');
       }
 
+      // Add additional structured data for book
+      if (post.getYourBookLink) {
+        jsonLd.itemReviewed.offers = {
+          '@type': 'Offer',
+          url: post.getYourBookLink,
+          seller: {
+            '@type': 'Organization',
+            name: 'Various Booksellers',
+          },
+        };
+      }
+
+      // Add aggregate rating for the website
+      jsonLd.aggregateRating = {
+        '@type': 'AggregateRating',
+        ratingValue: post.rating,
+        bestRating: '5',
+        worstRating: '1',
+        reviewCount: '1',
+      };
+
       const script = document.createElement('script');
       script.type = 'application/ld+json';
       script.text = JSON.stringify(jsonLd);
+      script.id = 'book-review-jsonld';
       document.head.appendChild(script);
 
       return () => {
-        document.head.removeChild(script);
+        const existingScript = document.getElementById('book-review-jsonld');
+        if (existingScript) {
+          existingScript.remove();
+        }
       };
     }
   }, [post]);
@@ -299,16 +336,27 @@ export default function ReviewPageClient({ slug, bookInfo }: ReviewPageClientPro
     const fetchFavorites = async () => {
       if (!user) {
         setFavorites([]);
+        setIsLiked(false);
+        setIsSaved(false);
         return;
       }
       try {
         const favRes = await fetch(`/api/favorites?userId=${user.uid}`);
         const favData = await favRes.json();
-        const favIds = (favData.favorites || []).map((f: any) => f.postId);
-        setFavorites(favIds);
+        const allFavorites = favData.favorites || [];
+        
+        // Separate likes and saves
+        const likes = allFavorites.filter((f: any) => f.type === 'like' || !f.type);
+        const saves = allFavorites.filter((f: any) => f.type === 'save');
+        
+        const likeIds = likes.map((f: any) => f.postId);
+        const saveIds = saves.map((f: any) => f.postId);
+        
+        setFavorites(allFavorites.map((f: any) => f.postId));
+        
         if (post) {
-          setIsLiked(favIds.includes(post.id));
-          setIsSaved(favIds.includes(post.id));
+          setIsLiked(likeIds.includes(post.id));
+          setIsSaved(saveIds.includes(post.id));
         }
       } catch (error) {
         console.error('Error fetching favorites:', error);
@@ -330,7 +378,7 @@ export default function ReviewPageClient({ slug, bookInfo }: ReviewPageClientPro
         await fetch('/api/favorites', {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ postId: post.id, userId: user.uid }),
+          body: JSON.stringify({ postId: post.id, userId: user.uid, type: 'like' }),
         });
         setIsLiked(false);
         setPost((prev) => prev ? { ...prev, likes: Math.max(0, (prev.likes || 0) - 1) } : null);
@@ -338,7 +386,7 @@ export default function ReviewPageClient({ slug, bookInfo }: ReviewPageClientPro
         await fetch('/api/favorites', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ postId: post.id, userId: user.uid }),
+          body: JSON.stringify({ postId: post.id, userId: user.uid, type: 'like' }),
         });
         setIsLiked(true);
         setPost((prev) => prev ? { ...prev, likes: (prev.likes || 0) + 1 } : null);
@@ -360,14 +408,14 @@ export default function ReviewPageClient({ slug, bookInfo }: ReviewPageClientPro
         await fetch('/api/favorites', {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ postId: post.id, userId: user.uid }),
+          body: JSON.stringify({ postId: post.id, userId: user.uid, type: 'save' }),
         });
         setIsSaved(false);
       } else {
         await fetch('/api/favorites', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ postId: post.id, userId: user.uid }),
+          body: JSON.stringify({ postId: post.id, userId: user.uid, type: 'save' }),
         });
         setIsSaved(true);
       }
